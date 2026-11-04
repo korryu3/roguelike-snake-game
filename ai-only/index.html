@@ -1,0 +1,309 @@
+<title>蛇窟の深淵</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Pixelify+Sans:wght@500;700&display=swap">
+<style>
+  /* 一画面のアーケード筐体。左に盤面、右（狭い画面では下）に計器と操作盤。暗い洞窟一択の単一テーマ。 */
+  :root {
+    --cave: #14161c;
+    --cave-2: #1d2029;
+    --stone: #3b3f4d;
+    --stone-hi: #555a6b;
+    --ink: #e9e4d6;
+    --dim: #8a8678;
+    --scale: #d9a441;
+    --scale-dk: #8f6420;
+    --blood: #d8534a;
+    --gold: #ffd166;
+    --portal: #63c7d6;
+    --slime: #a77bd9;
+    --display: 'Pixelify Sans', 'DotGothic16', ui-monospace, monospace;
+    --body: 'DotGothic16', 'Hiragino Kaku Gothic ProN', ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    background: var(--cave);
+    color: var(--ink);
+    font-family: var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 16px;
+    box-sizing: border-box;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; align-items: start; }
+  @media (max-width: 760px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 12px; } }
+  h1 { font-family: var(--display); font-weight: 700; font-size: 28px; letter-spacing: 0.04em; margin: 0; color: var(--scale); text-wrap: balance; }
+  .sub { color: var(--dim); font-size: 13px; margin: 2px 0 0; }
+  .board { position: relative; aspect-ratio: 1; max-width: 100%; border: 3px solid var(--stone); background: var(--cave-2); }
+  canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; touch-action: none; }
+  .overlay { position: absolute; inset: 0; display: grid; place-content: center; gap: 14px; padding: 16px; text-align: center; background: color-mix(in srgb, var(--cave) 86%, transparent); }
+  .overlay h2 { font-family: var(--display); font-size: 26px; margin: 0; color: var(--scale); }
+  .overlay p { margin: 0; color: var(--ink); line-height: 1.6; }
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 520px; }
+  @media (max-width: 480px) { .cards { grid-template-columns: minmax(0, 1fr); } }
+  .card { font: inherit; color: var(--ink); background: var(--cave-2); border: 2px solid var(--stone-hi); padding: 12px 10px; cursor: pointer; text-align: left; display: grid; gap: 6px; }
+  .card:hover, .card:focus-visible { border-color: var(--scale); outline: none; transform: translateY(-2px); }
+  .card b { font-family: var(--display); color: var(--gold); font-size: 16px; }
+  .card span { font-size: 13px; color: var(--dim); line-height: 1.5; }
+  .card kbd { font-size: 11px; color: var(--scale); }
+  .btn { font: inherit; font-family: var(--display); font-size: 18px; color: var(--cave); background: var(--scale); border: 0; padding: 10px 18px; cursor: pointer; justify-self: center; }
+  .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .side { display: grid; gap: 14px; }
+  .gauges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; padding: 12px; border: 2px solid var(--stone); }
+  .g { display: grid; gap: 2px; min-width: 0; }
+  .g small { font-size: 11px; color: var(--dim); letter-spacing: 0.08em; }
+  .g strong { font-family: var(--display); font-size: 22px; font-variant-numeric: tabular-nums; }
+  .hearts { color: var(--blood); letter-spacing: 2px; }
+  .bar { height: 8px; background: var(--cave-2); border: 1px solid var(--stone); }
+  .bar i { display: block; height: 100%; background: var(--portal); width: 0; transition: width 120ms; }
+  .full { grid-column: 1 / -1; }
+  .perks { display: flex; flex-wrap: wrap; gap: 6px; min-height: 26px; }
+  .chip { font-size: 12px; padding: 3px 8px; border: 1px solid var(--stone-hi); color: var(--gold); }
+  .help { font-size: 13px; color: var(--dim); line-height: 1.7; margin: 0; }
+  .pad { display: none; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 48px); gap: 6px; justify-content: center; }
+  .pad button { font: inherit; font-size: 20px; color: var(--ink); background: var(--cave-2); border: 2px solid var(--stone-hi); touch-action: manipulation; }
+  .pad button:active { border-color: var(--scale); }
+  .pad .u { grid-column: 2; }
+  .pad .l { grid-column: 1; grid-row: 2; }
+  .pad .d { grid-column: 2; grid-row: 2; }
+  .pad .r { grid-column: 3; grid-row: 2; }
+  @media (pointer: coarse) { .pad { display: grid; } }
+  @media (prefers-reduced-motion: reduce) { .card:hover { transform: none; } .bar i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <main>
+    <div class="board">
+      <canvas id="cv" width="570" height="570" aria-label="ゲーム盤面"></canvas>
+      <div class="overlay" id="ov-start">
+        <h2>蛇窟の深淵</h2>
+        <p>リンゴを食べて出口の封印を解き、<br>より深い階層へ潜れ。</p>
+        <button class="btn" id="start">潜る</button>
+      </div>
+      <div class="overlay" id="ov-perk" hidden>
+        <h2 id="perk-title">地下1階を突破</h2>
+        <p>力を一つ選べ</p>
+        <div class="cards" id="cards"></div>
+      </div>
+      <div class="overlay" id="ov-dead" hidden>
+        <h2>力尽きた</h2>
+        <p id="dead-text"></p>
+        <button class="btn" id="retry">もう一度潜る</button>
+      </div>
+    </div>
+  </main>
+  <aside class="side">
+    <div>
+      <h1>蛇窟の深淵</h1>
+      <p class="sub">ローグライク・スネーク</p>
+    </div>
+    <div class="gauges">
+      <div class="g"><small>階層</small><strong id="floor">B1F</strong></div>
+      <div class="g"><small>スコア</small><strong id="score">0</strong></div>
+      <div class="g"><small>体力</small><strong class="hearts" id="hp"></strong></div>
+      <div class="g"><small>最高記録</small><strong id="best">0</strong></div>
+      <div class="g full"><small id="need-label">封印</small><div class="bar"><i id="need"></i></div></div>
+    </div>
+    <div>
+      <p class="help" style="margin-bottom:6px">所持している力</p>
+      <div class="perks" id="perks"></div>
+    </div>
+    <div class="pad" id="pad">
+      <button class="u" data-dir="up" aria-label="上">▲</button>
+      <button class="l" data-dir="left" aria-label="左">◀</button>
+      <button class="d" data-dir="down" aria-label="下">▼</button>
+      <button class="r" data-dir="right" aria-label="右">▶</button>
+    </div>
+    <p class="help">矢印キー / WASD / スワイプで移動。壁・自分の体・スライムにぶつかるとHPが1減って止まる。向きを変えれば再開。金のリンゴはHPを1回復。HPが尽きたら最初から。</p>
+  </aside>
+</div>
+
+<script type="module">
+import { newRun, step, choosePerk, tickMs, PERKS, W, H } from './logic.js';
+
+const $ = (id) => document.getElementById(id);
+const cv = $('cv');
+const ctx = cv.getContext('2d');
+const CELL = cv.width / W;
+
+let state = null;
+let inputs = [];
+let acc = 0;
+let last = 0;
+
+const loadBest = () => { try { return Number(localStorage.getItem('snake-dungeon-best')) || 0; } catch { return 0; } };
+const saveBest = (v) => { try { localStorage.setItem('snake-dungeon-best', String(v)); } catch {} };
+let best = loadBest();
+
+function start() {
+  state = newRun((Math.random() * 2 ** 31) | 0);
+  inputs = [];
+  acc = 0;
+  $('ov-start').hidden = true;
+  $('ov-dead').hidden = true;
+  $('ov-perk').hidden = true;
+  syncHud();
+}
+
+function pushInput(dir) {
+  if (!state || state.phase !== 'play') return;
+  if (inputs.length < 3) inputs.push(dir);
+}
+
+const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
+addEventListener('keydown', (e) => {
+  if (KEYS[e.key]) { e.preventDefault(); pushInput(KEYS[e.key]); return; }
+  if (state?.phase === 'perk' && ['1', '2', '3'].includes(e.key)) pick(state.offer[Number(e.key) - 1]);
+  if ((e.key === 'Enter' || e.key === ' ') && (!state || state.phase === 'dead')) { e.preventDefault(); start(); }
+});
+
+let touch = null;
+cv.addEventListener('pointerdown', (e) => { touch = { x: e.clientX, y: e.clientY }; });
+cv.addEventListener('pointerup', (e) => {
+  if (!touch) return;
+  const dx = e.clientX - touch.x, dy = e.clientY - touch.y;
+  touch = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return;
+  pushInput(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+});
+$('pad').addEventListener('pointerdown', (e) => { const d = e.target.closest('button')?.dataset.dir; if (d) { e.preventDefault(); pushInput(d); } });
+$('start').onclick = start;
+$('retry').onclick = start;
+
+function pick(id) {
+  if (!id) return;
+  state = choosePerk(state, id);
+  $('ov-perk').hidden = true;
+  inputs = [];
+  syncHud();
+}
+
+function showPerks() {
+  $('perk-title').textContent = `地下${state.floor}階を突破`;
+  const cards = $('cards');
+  cards.replaceChildren(...state.offer.map((id, i) => {
+    const b = document.createElement('button');
+    b.className = 'card';
+    b.innerHTML = `<kbd>[${i + 1}]</kbd><b>${PERKS[id].name}</b><span>${PERKS[id].text}</span>`;
+    b.onclick = () => pick(id);
+    return b;
+  }));
+  $('ov-perk').hidden = false;
+  cards.firstChild?.focus();
+}
+
+function showDead() {
+  if (state.score > best) { best = state.score; saveBest(best); }
+  $('dead-text').innerHTML = `地下${state.floor}階で倒れた<br>スコア ${state.score}・最高記録 ${best}`;
+  $('ov-dead').hidden = false;
+  $('retry').focus();
+}
+
+function syncHud() {
+  $('floor').textContent = `B${state.floor}F`;
+  $('score').textContent = state.score;
+  $('best').textContent = Math.max(best, state.score);
+  $('hp').textContent = '♥'.repeat(Math.max(0, state.hp)) + '♡'.repeat(Math.max(0, state.maxHp - state.hp));
+  $('need').style.width = `${Math.min(1, state.eaten / state.need) * 100}%`;
+  $('need-label').textContent = state.exitOpen ? '封印解除。出口へ向かえ' : `封印 ${state.eaten} / ${state.need}`;
+  const chips = [];
+  const count = {};
+  for (const id of state.taken) count[id] = (count[id] || 0) + 1;
+  for (const [id, n] of Object.entries(count)) chips.push(`${PERKS[id].name}${n > 1 ? ` ×${n}` : ''}`);
+  if (state.perks.breaker > 0) chips.push(`壁砕き残り${state.perks.breaker}`);
+  $('perks').replaceChildren(...(chips.length ? chips : ['なし']).map((t) => {
+    const c = document.createElement('span'); c.className = 'chip'; c.textContent = t; return c;
+  }));
+}
+
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = Object.fromEntries(['cave', 'cave-2', 'stone', 'stone-hi', 'scale', 'scale-dk', 'blood', 'gold', 'portal', 'slime', 'ink'].map((n) => [n, css(`--${n}`)]));
+
+function cell(x, y, color, inset = 0) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x * CELL + inset, y * CELL + inset, CELL - inset * 2, CELL - inset * 2);
+}
+
+function draw(t) {
+  ctx.fillStyle = C['cave-2'];
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  if (!state) return;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if ((x + y) % 2) cell(x, y, C.cave);
+
+  for (const k of state.walls) {
+    const [x, y] = k.split(',').map(Number);
+    cell(x, y, C.stone);
+    ctx.fillStyle = C['stone-hi'];
+    ctx.fillRect(x * CELL, y * CELL, CELL, 3);
+  }
+
+  if (state.exit) {
+    const { x, y } = state.exit;
+    const cx = (x + 0.5) * CELL, cy = (y + 0.5) * CELL;
+    ctx.strokeStyle = state.exitOpen ? C.portal : C['stone-hi'];
+    ctx.lineWidth = 3;
+    const r = state.exitOpen ? CELL * (0.32 + 0.06 * Math.sin(t / 180)) : CELL * 0.3;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    if (state.exitOpen) { ctx.fillStyle = C.portal; ctx.globalAlpha = 0.35; ctx.fill(); ctx.globalAlpha = 1; }
+  }
+
+  for (const f of state.food) {
+    ctx.fillStyle = f.kind === 'gold' ? C.gold : C.blood;
+    ctx.beginPath(); ctx.arc((f.x + 0.5) * CELL, (f.y + 0.55) * CELL, CELL * 0.32, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = C.ink;
+    ctx.fillRect((f.x + 0.48) * CELL, (f.y + 0.12) * CELL, 3, CELL * 0.18);
+  }
+
+  for (const e of state.enemies) {
+    const bob = Math.sin(t / 150 + e.x) * 1.5;
+    ctx.fillStyle = C.slime;
+    ctx.beginPath();
+    ctx.ellipse((e.x + 0.5) * CELL, (e.y + 0.6) * CELL + bob, CELL * 0.38, CELL * 0.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = C.cave;
+    ctx.fillRect((e.x + 0.32) * CELL, (e.y + 0.5) * CELL + bob, 3, 3);
+    ctx.fillRect((e.x + 0.6) * CELL, (e.y + 0.5) * CELL + bob, 3, 3);
+  }
+
+  const hurt = state.flash > 0 && Math.floor(t / 80) % 2 === 0;
+  state.snake.forEach((p, i) => {
+    const color = hurt ? C.blood : (i % 2 ? C['scale-dk'] : C.scale);
+    cell(p.x, p.y, color, i === 0 ? 1 : 3);
+  });
+  const h = state.snake[0];
+  const [ex, ey] = { up: [[0.28, 0.25], [0.62, 0.25]], down: [[0.28, 0.62], [0.62, 0.62]], left: [[0.22, 0.28], [0.22, 0.62]], right: [[0.66, 0.28], [0.66, 0.62]] }[state.dir];
+  ctx.fillStyle = C.cave;
+  ctx.fillRect((h.x + ex[0]) * CELL, (h.y + ex[1]) * CELL, 4, 4);
+  ctx.fillRect((h.x + ey[0]) * CELL, (h.y + ey[1]) * CELL, 4, 4);
+
+  if (state.stunned && state.phase === 'play') {
+    ctx.fillStyle = C.ink;
+    ctx.font = `16px ${css('--body')}`;
+    ctx.textAlign = 'center';
+    ctx.fillText('向きを変えて再開', cv.width / 2, cv.height - 10);
+  }
+}
+
+function frame(t) {
+  const dt = Math.min(250, t - (last || t));
+  last = t;
+  if (state?.phase === 'play') {
+    acc += dt;
+    while (acc >= tickMs(state) && state.phase === 'play') {
+      acc -= tickMs(state);
+      const before = state.phase;
+      state = step(state, inputs.shift() ?? null);
+      syncHud();
+      if (before === 'play' && state.phase === 'perk') showPerks();
+      if (state.phase === 'dead') showDead();
+    }
+  }
+  draw(t);
+  requestAnimationFrame(frame);
+}
+
+$('best').textContent = best;
+requestAnimationFrame(frame);
+</script>
