@@ -27,6 +27,7 @@ body {
 .hud-row {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   align-items: center;
   font-size: 18px;
   font-variant-numeric: tabular-nums;
@@ -85,34 +86,246 @@ body {
   border: 2px solid #1b2a42;
 }
 
-.overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(7, 13, 24, 0.55);
-  pointer-events: none;
-}
-
-.overlay-prompt {
-  justify-content: flex-start;
-  padding-top: 72px;
-  background: none;
-  text-shadow: 0 2px 6px #000;
-}
-
-.overlay-title {
+.board-hint {
   margin: 0;
-  font-size: 28px;
+  font-size: 18px;
+  font-weight: 700;
+  animation: glow 0.8s ease-in-out infinite alternate;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.hud-modules {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.hud-modules-label {
+  color: #94a3b8;
+}
+
+.chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  font-size: 13px;
+}
+
+.chip-count {
+  margin-left: 4px;
+  color: #facc15;
+  font-variant-numeric: tabular-nums;
+}
+
+.button {
+  font: inherit;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: inherit;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: #273449;
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.button-primary {
+  background: #0ea5e9;
+  border-color: #0ea5e9;
+  color: #0f172a;
   font-weight: 700;
 }
 
-.overlay-hint {
-  margin: 8px 0 0;
-  font-size: 16px;
+.button-primary:hover:not(:disabled) {
+  background: #38bdf8;
+}
+
+.button-large {
+  font-size: 22px;
+  padding: 12px 40px;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.title-screen {
+  gap: 32px;
+}
+
+.game-title {
+  margin: 0;
+  font-size: 56px;
+  letter-spacing: 4px;
+  color: #7dd3fc;
+  text-shadow: 0 0 24px rgba(14, 165, 233, 0.6);
+}
+
+.screen-title {
+  margin: 0;
+  font-size: 36px;
+}
+
+.lang-switch {
+  display: flex;
+  gap: 8px;
+}
+
+.lang-current {
+  border-color: #7dd3fc;
+  color: #7dd3fc;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(7, 13, 24, 0.7);
+}
+
+.modal {
+  width: min(760px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px;
+  border-radius: 12px;
+  border: 2px solid #1b2a42;
+  background: #0b1424;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 26px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 6px 24px;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats dt {
   color: #94a3b8;
+}
+
+.stats dd {
+  margin: 0;
+  text-align: right;
+}
+
+.stats .stats-sub {
+  font-size: 15px;
+  padding-left: 16px;
+}
+
+.stats .stats-modules {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  max-width: 360px;
+}
+
+.shop-pp {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.offers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.offer {
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #0f1a2b;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.offer-sold {
+  opacity: 0.5;
+}
+
+.offer-name {
+  margin: 0;
+  font-size: 17px;
+}
+
+.offer-description {
+  margin: 0;
+  flex: 1;
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.offer-price {
+  margin: 0;
+  font-weight: 700;
+  color: #facc15;
+}
+
+.revive-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(420px, 100%);
+}
+
+.revive-option {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.revive-hp {
+  color: #4ade80;
+  font-weight: 700;
 }
 
 .controls {
