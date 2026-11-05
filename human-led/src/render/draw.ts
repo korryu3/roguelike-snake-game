@@ -1,5 +1,5 @@
 import { centerOf } from "../logic/board";
-import type { Cell, Game, Movement, StageState } from "../logic/types";
+import type { BatteryKind, Cell, Game, Movement, StageState } from "../logic/types";
 import { BLINK_INTERVAL_MS, boardPx, CELL_PX, COLORS } from "./style";
 
 type Ctx = CanvasRenderingContext2D;
@@ -13,7 +13,7 @@ export function drawGame(ctx: Ctx, game: Game): void {
   drawGrid(ctx, boardPx(boardSize));
   drawCenter(ctx, centerOf(boardSize));
   drawWalls(ctx, stage.walls);
-  drawBattery(ctx, stage.battery);
+  drawBattery(ctx, stage.battery, stage.batteryKind);
   if (stage.goal) drawGoal(ctx, stage.goal);
   drawHearts(ctx, stage.hearts);
   drawSnake(ctx, stage.body, "movement" in game ? game.movement : null);
@@ -50,16 +50,24 @@ function drawWalls(ctx: Ctx, walls: readonly Cell[]): void {
   }
 }
 
-function drawBattery(ctx: Ctx, battery: Cell): void {
+/** PP2倍のバッテリーは、色だけに頼らず「2」の印でも見分けられるようにする */
+function drawBattery(ctx: Ctx, battery: Cell, kind: BatteryKind): void {
   const { x, y } = px(battery);
-  const w = CELL_PX * 0.45;
+  const double = kind === "doublePp";
+  const w = CELL_PX * (double ? 0.55 : 0.45);
   const h = CELL_PX * 0.65;
   const left = x + (CELL_PX - w) / 2;
   const top = y + (CELL_PX - h) / 2 + 2;
-  ctx.fillStyle = COLORS.batteryCap;
+  ctx.fillStyle = double ? COLORS.doubleBatteryCap : COLORS.batteryCap;
   ctx.fillRect(left + w / 4, top - 4, w / 2, 4);
-  ctx.fillStyle = COLORS.battery;
+  ctx.fillStyle = double ? COLORS.doubleBattery : COLORS.battery;
   ctx.fillRect(left, top, w, h);
+  if (!double) return;
+  ctx.fillStyle = COLORS.doubleBatteryMark;
+  ctx.font = `bold ${Math.round(h * 0.7)}px system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("2", left + w / 2, top + h / 2 + 1);
 }
 
 function drawGoal(ctx: Ctx, goal: Cell): void {
