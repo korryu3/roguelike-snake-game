@@ -23,6 +23,7 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
   const [jsonText, setJsonText] = useState("");
   const [messages, setMessages] = useState<readonly string[]>([]);
   const jsonRef = useRef<HTMLTextAreaElement>(null);
+  const hasPendingChanges = toJson(draft) !== toJson(running);
 
   const replace = (tuning: Tuning, notes: readonly string[]) => {
     onChange(tuning);
@@ -67,7 +68,9 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
           既定値に戻す
         </button>
       </div>
-      {toJson(draft) !== toJson(running) && <p className="tuning-note">今のランにはまだ反映していない</p>}
+      <p className={`tuning-note${hasPendingChanges ? "" : " tuning-note-placeholder"}`} aria-hidden={!hasPendingChanges}>
+        今のランにはまだ反映していない
+      </p>
       {!saved && <p className="tuning-note">この環境では保存できない。閉じると消える</p>}
 
       <div key={revision}>

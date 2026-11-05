@@ -74,11 +74,11 @@ describe("createSession", () => {
       expect(game.movement.queuedInputs).toEqual([]);
     });
 
-    test("始め直すとパネルが閉じる", () => {
+    test("パネルを開いたまま始め直しても閉じない", () => {
       const session = createSession(seeds(1, 2));
       session.command({ kind: "togglePanel" });
       session.restart(DEFAULT_TUNING);
-      expect(session.panelOpen.getSnapshot()).toBe(false);
+      expect(session.panelOpen.getSnapshot()).toBe(true);
     });
   });
 
