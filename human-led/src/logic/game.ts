@@ -1,7 +1,7 @@
 import { CONFIG } from "../config";
 import { pick } from "./rng";
 import { WALL_PATTERNS } from "./wallPatterns";
-import type { Cell, Direction, Game, RngState, RunSetup, StageState, StepResult } from "./types";
+import type { Cell, Direction, Game, GameEvent, RngState, RunSetup, StageState, StepResult } from "./types";
 
 const CENTER: Cell = { x: Math.floor(CONFIG.boardSize / 2), y: Math.floor(CONFIG.boardSize / 2) };
 
@@ -65,7 +65,7 @@ export function step(game: Game, input: readonly Direction[], elapsedMs: number)
     case "awaitingStart":
       return { game: startPlaying(game, input), events: [] };
     case "playing":
-      return { game: advance(enqueue(game, input), elapsedMs), events: [] };
+      return advance(enqueue(game, input), elapsedMs);
     default:
       return { game, events: [] };
   }
@@ -93,22 +93,56 @@ function enqueue(game: Playing, input: readonly Direction[]): Playing {
   return { ...game, movement: { ...game.movement, queuedInputs } };
 }
 
-function advance(game: Playing, elapsedMs: number): Playing {
+function advance(game: Playing, elapsedMs: number): StepResult {
   const timed: Playing = { ...game, stage: { ...game.stage, remainingMs: game.stage.remainingMs - elapsedMs } };
   const { motion } = timed.movement;
-  if (motion.kind !== "moving") return timed;
+  if (motion.kind !== "moving") return { game: timed, events: [] };
   const sinceLastMoveMs = motion.sinceLastMoveMs + elapsedMs;
   if (sinceLastMoveMs < CONFIG.moveIntervalMs) {
-    return { ...timed, movement: { ...timed.movement, motion: { kind: "moving", sinceLastMoveMs } } };
+    return { game: { ...timed, movement: { ...timed.movement, motion: { kind: "moving", sinceLastMoveMs } } }, events: [] };
   }
-  const moved = moveOneCell(timed);
-  return { ...moved, movement: { ...moved.movement, motion: { kind: "moving", sinceLastMoveMs: sinceLastMoveMs - CONFIG.moveIntervalMs } } };
+  const waited: Playing = {
+    ...timed,
+    movement: { ...timed.movement, motion: { kind: "moving", sinceLastMoveMs: sinceLastMoveMs - CONFIG.moveIntervalMs } },
+  };
+  return moveOneCell(waited);
 }
 
-function moveOneCell(game: Playing): Playing {
+function moveOneCell(game: Playing): StepResult {
   const [next, ...rest] = game.movement.queuedInputs;
   const direction = next ?? game.movement.direction;
   const { body: current } = game.stage;
-  const body: StageState["body"] = [neighbor(current[0], direction), ...current.slice(0, game.run.length - 1)];
-  return { ...game, stage: { ...game.stage, body }, movement: { ...game.movement, direction, queuedInputs: rest } };
+  const head = neighbor(current[0], direction);
+  const body: StageState["body"] = [head, ...current.slice(0, game.run.length - 1)];
+  const moved: Playing = { ...game, stage: { ...game.stage, body }, movement: { ...game.movement, direction, queuedInputs: rest } };
+  if (game.stage.goal && sameCell(head, game.stage.goal)) {
+    return { game: { phase: "cleared", run: moved.run, stage: moved.stage }, events: [{ type: "cleared" }] };
+  }
+  if (sameCell(head, game.stage.battery)) return eatBattery(moved);
+  return { game: moved, events: [] };
+}
+
+function eatBattery(game: Playing): StepResult {
+  const { run, stage } = game;
+  const events: GameEvent[] = [{ type: "batteryEaten", at: stage.battery }];
+  const occupied = [...stage.walls, ...stage.body, ...(stage.goal ? [stage.goal] : [])];
+  const [battery, rngAfterBattery] = spawnOnFreeCell(run.rng, occupied);
+  const batteriesEaten = stage.batteriesEaten + 1;
+  const reachedGoal = stage.goal === null && batteriesEaten >= CONFIG.batteriesToGoal;
+  const [goal, rng] = reachedGoal ? spawnOnFreeCell(rngAfterBattery, [...occupied, battery]) : [stage.goal, rngAfterBattery];
+  if (reachedGoal && goal) events.push({ type: "goalAppeared", at: goal });
+  return {
+    game: {
+      ...game,
+      run: {
+        ...run,
+        length: run.length + 1,
+        pp: run.pp + CONFIG.ppPerBattery,
+        totalPp: run.totalPp + CONFIG.ppPerBattery,
+        rng,
+      },
+      stage: { ...stage, battery, goal, batteriesEaten },
+    },
+    events,
+  };
 }
