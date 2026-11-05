@@ -27,7 +27,6 @@ export function commandOfKey(code: string): KeyCommand | null {
 
 const TYPING_TAGS: ReadonlySet<string> = new Set(["INPUT", "TEXTAREA", "SELECT"]);
 
-/** 入力欄に打っているキーは、ゲームの操作にしない */
 export function isTypingTarget(element: Pick<HTMLElement, "tagName" | "isContentEditable">): boolean {
   return TYPING_TAGS.has(element.tagName) || element.isContentEditable;
 }

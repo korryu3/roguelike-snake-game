@@ -2,16 +2,18 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { startLoop } from "./loop/run";
 import { createSession } from "./loop/session";
+import { createTuningStorage } from "./tuning/storage";
 import { App } from "./ui/App";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root が見つからない");
 
-const session = createSession(() => Math.floor(Math.random() * 2 ** 32));
+const tuningStorage = createTuningStorage(() => window.localStorage);
+const session = createSession(() => Math.floor(Math.random() * 2 ** 32), tuningStorage.load());
 startLoop(session);
 
 createRoot(root).render(
   <StrictMode>
-    <App session={session} />
+    <App session={session} tuningStorage={tuningStorage} />
   </StrictMode>,
 );
