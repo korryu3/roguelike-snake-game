@@ -1,7 +1,7 @@
 import { CONFIG } from "../config";
 import { CENTER, DIRECTIONS, insideBoard, neighbor, OPPOSITE, sameCell, spawnOnFreeCell } from "./board";
-import { consumeAtStageStart, effectsOf, REVIVE_HP } from "./modules";
-import { pick } from "./rng";
+import { consumeAtStageStart, consumeOne, effectsOf, REVIVE_HP } from "./modules";
+import { nextFloat, pick } from "./rng";
 import { WALL_PATTERNS } from "./wallPatterns";
 import type { Cell, ClearSummary, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, RunState, StageState, StepResult } from "./types";
 
@@ -38,6 +38,7 @@ function enterStage(run: RunState, setup: RunSetup = {}): Game {
       body,
       walls,
       battery: setup.battery ?? spawned,
+      batteryKind: setup.batteryKind ?? "normal",
       goal: setup.goal ?? null,
       hearts: [],
       timeLimitMs,
@@ -50,10 +51,9 @@ function enterStage(run: RunState, setup: RunSetup = {}): Game {
 
 export function revive(game: Game, module: ModuleId): StepResult {
   if (game.phase !== "reviveChoice") return { game, events: [] };
-  const index = game.run.modules.indexOf(module);
-  const modules = game.run.modules.filter((_, i) => i !== index);
+  const modules = consumeOne(game.run.modules, module);
   const reviveHp = REVIVE_HP[module];
-  if (reviveHp === undefined || index < 0) return { game, events: [] };
+  if (reviveHp === undefined || modules === null) return { game, events: [] };
   return {
     game: {
       phase: "playing",
@@ -172,22 +172,26 @@ function eatBattery(game: Playing): StepResult {
   const { run, stage } = game;
   const events: GameEvent[] = [{ type: "batteryEaten", at: stage.battery }];
   const occupied = [...stage.walls, ...stage.body, ...(stage.goal ? [stage.goal] : [])];
-  const [battery, rngAfterBattery] = spawnOnFreeCell(run.rng, occupied);
+  const [battery, rngAfterCell] = spawnOnFreeCell(run.rng, occupied);
+  const [roll, rngAfterBattery] = nextFloat(rngAfterCell);
+  const batteryKind = roll < effectsOf(run.modules).doublePpBatteryChance ? "doublePp" : "normal";
   const batteriesEaten = stage.batteriesEaten + 1;
   const reachedGoal = stage.goal === null && batteriesEaten >= CONFIG.batteriesToGoal;
   const [goal, rng] = reachedGoal ? spawnOnFreeCell(rngAfterBattery, [...occupied, battery]) : [stage.goal, rngAfterBattery];
   if (reachedGoal && goal) events.push({ type: "goalAppeared", at: goal });
+  const { batteryMultiplier } = effectsOf(run.modules);
+  const pp = CONFIG.ppPerBattery * batteryMultiplier * (stage.batteryKind === "doublePp" ? 2 : 1);
   return {
     game: {
       ...game,
       run: {
         ...run,
-        length: run.length + 1,
-        pp: run.pp + CONFIG.ppPerBattery,
-        totalPp: run.totalPp + CONFIG.ppPerBattery,
+        length: run.length + batteryMultiplier,
+        pp: run.pp + pp,
+        totalPp: run.totalPp + pp,
         rng,
       },
-      stage: { ...stage, battery, goal, batteriesEaten, ppEarned: stage.ppEarned + CONFIG.ppPerBattery },
+      stage: { ...stage, battery, batteryKind, goal, batteriesEaten, ppEarned: stage.ppEarned + pp },
     },
     events,
   };
@@ -210,6 +214,14 @@ function collide(game: Playing, obstacle: Obstacle): StepResult {
       events: [{ type: "collided", obstacle, damaged: false }],
     };
   }
+  const stunned = { kind: "stunned", remainingMs: CONFIG.stunMs } as const;
+  const modules = obstacle === "wall" ? consumeOne(game.run.modules, "wallDamageImmunity") : null;
+  if (modules) {
+    return {
+      game: { ...game, run: { ...game.run, modules }, movement: { ...game.movement, motion: stunned } },
+      events: [{ type: "collided", obstacle, damaged: false }],
+    };
+  }
   const run = { ...game.run, hp: game.run.hp - 1 };
   const collided: GameEvent = { type: "collided", obstacle, damaged: true };
   if (run.hp <= 0) {
@@ -220,7 +232,7 @@ function collide(game: Playing, obstacle: Obstacle): StepResult {
     return { game: { phase: "gameOver", run, cause: "hp" }, events };
   }
   return {
-    game: { ...game, run, movement: { ...game.movement, motion: { kind: "stunned", remainingMs: CONFIG.stunMs } } },
+    game: { ...game, run, movement: { ...game.movement, motion: stunned } },
     events: [collided],
   };
 }

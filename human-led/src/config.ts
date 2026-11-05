@@ -17,6 +17,7 @@ export const CONFIG = {
   rerollPrice: 2,
   timeLimitPlusMs: 5_000,
   timeLimitBoostMs: 15_000,
+  doublePpBatteryChancePerStack: 0.2,
 } as const;
 
 export type ModuleSpec = {

@@ -28,11 +28,15 @@ export type RunState = {
   readonly rng: RngState;
 };
 
+/** doublePpは、食べたときのPPが2倍になるバッテリー */
+export type BatteryKind = "normal" | "doublePp";
+
 export type StageState = {
   /** 先頭が頭 */
   readonly body: readonly [Cell, ...Cell[]];
   readonly walls: readonly Cell[];
   readonly battery: Cell;
+  readonly batteryKind: BatteryKind;
   readonly goal: Cell | null;
   readonly hearts: readonly Cell[];
   readonly timeLimitMs: number;
@@ -102,6 +106,7 @@ export type StepResult = { readonly game: Game; readonly events: readonly GameEv
 export type RunSetup = {
   readonly walls?: readonly Cell[];
   readonly battery?: Cell;
+  readonly batteryKind?: BatteryKind;
   readonly goal?: Cell;
   readonly batteriesEaten?: number;
   readonly length?: number;
