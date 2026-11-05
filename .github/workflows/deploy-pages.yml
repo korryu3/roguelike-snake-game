@@ -38,12 +38,20 @@ jobs:
         working-directory: human-led
         run: npm run build
 
+      - name: Test ai-only
+        working-directory: ai-only
+        run: npm test
+
+      - name: Build ai-only
+        working-directory: ai-only
+        run: node build.js
+
       - name: Assemble site
         run: |
           mkdir -p _site/human-led _site/ai-only
           cp .github/pages/index.html _site/
           cp human-led/dist/index.html _site/human-led/
-          cp ai-only/index.html ai-only/logic.js _site/ai-only/
+          cp ai-only/dist/snake.html _site/ai-only/index.html
 
       - uses: actions/configure-pages@v6
 
