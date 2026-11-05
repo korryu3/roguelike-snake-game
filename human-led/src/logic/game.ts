@@ -1,35 +1,47 @@
 import { CONFIG } from "../config";
 import { CENTER, DIRECTIONS, insideBoard, neighbor, OPPOSITE, sameCell, spawnOnFreeCell } from "./board";
+import { consumeAtStageStart, effectsOf } from "./modules";
 import { pick } from "./rng";
 import { WALL_PATTERNS } from "./wallPatterns";
-import type { Cell, ClearSummary, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, StageState, StepResult } from "./types";
+import type { Cell, ClearSummary, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, RunState, StageState, StepResult } from "./types";
 
 export function startRun(seed: number, setup: RunSetup = {}): Game {
-  const [patternWalls, rngAfterWalls] = pick(seed, WALL_PATTERNS);
+  const run: RunState = {
+    length: setup.length ?? CONFIG.initialLength,
+    hp: setup.hp ?? CONFIG.initialHp,
+    pp: setup.pp ?? 0,
+    totalPp: 0,
+    score: 0,
+    modules: setup.modules ?? [],
+    purchased: [],
+    stageNumber: 1,
+    rng: seed,
+  };
+  return enterStage(run, setup);
+}
+
+export function nextStage(game: Game): StepResult {
+  if (game.phase !== "shop") return { game, events: [] };
+  return { game: enterStage({ ...game.run, stageNumber: game.run.stageNumber + 1 }), events: [] };
+}
+
+function enterStage(run: RunState, setup: RunSetup = {}): Game {
+  const [patternWalls, rngAfterWalls] = pick(run.rng, WALL_PATTERNS);
   const walls = setup.walls ?? patternWalls;
   const body: StageState["body"] = [CENTER];
   const [spawned, rng] = spawnOnFreeCell(rngAfterWalls, [...walls, ...body]);
+  const { timeLimitMs } = effectsOf(run.modules);
   return {
     phase: "awaitingStart",
-    run: {
-      length: setup.length ?? CONFIG.initialLength,
-      hp: setup.hp ?? CONFIG.initialHp,
-      pp: setup.pp ?? 0,
-      totalPp: 0,
-      score: 0,
-      modules: setup.modules ?? [],
-      purchased: [],
-      stageNumber: 1,
-      rng,
-    },
+    run: { ...run, modules: consumeAtStageStart(run.modules), rng },
     stage: {
       body,
       walls,
       battery: setup.battery ?? spawned,
       goal: setup.goal ?? null,
       hearts: [],
-      timeLimitMs: CONFIG.timeLimitMs,
-      remainingMs: CONFIG.timeLimitMs,
+      timeLimitMs,
+      remainingMs: timeLimitMs,
       batteriesEaten: setup.batteriesEaten ?? 0,
       ppEarned: 0,
     },

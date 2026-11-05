@@ -15,6 +15,8 @@ export const CONFIG = {
   timeBonusPerSecond: 10,
   shopOfferCount: 3,
   rerollPrice: 2,
+  timeLimitPlusMs: 5_000,
+  timeLimitBoostMs: 15_000,
 } as const;
 
 export type ModuleSpec = {
