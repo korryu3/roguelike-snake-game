@@ -1,4 +1,4 @@
-import { CONFIG } from "../config";
+import type { Config } from "../config";
 import type { ModuleId } from "./types";
 
 export type Effects = {
@@ -9,16 +9,16 @@ export type Effects = {
   readonly doublePpBatteryChance: number;
 };
 
-export function effectsOf(modules: readonly ModuleId[]): Effects {
+export function effectsOf(modules: readonly ModuleId[], config: Config): Effects {
   const count = (id: ModuleId) => modules.filter((m) => m === id).length;
   return {
-    maxHp: CONFIG.initialHp + count("maxHpPlus1"),
+    maxHp: config.initialHp + count("maxHpPlus1"),
     timeLimitMs:
-      CONFIG.timeLimitMs +
-      count("timeLimitPlus5s") * CONFIG.timeLimitPlusMs +
-      count("timeLimitBoostNextStage") * CONFIG.timeLimitBoostMs,
+      config.timeLimitMs +
+      count("timeLimitPlus5s") * config.timeLimitPlusMs +
+      count("timeLimitBoostNextStage") * config.timeLimitBoostMs,
     batteryMultiplier: 1 + count("doublePpAndGrowth"),
-    doublePpBatteryChance: count("doublePpBattery") * CONFIG.doublePpBatteryChancePerStack,
+    doublePpBatteryChance: count("doublePpBattery") * config.doublePpBatteryChancePerStack,
   };
 }
 

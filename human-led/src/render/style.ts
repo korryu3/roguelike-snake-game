@@ -1,7 +1,5 @@
-import { CONFIG } from "../config";
-
 export const CELL_PX = 32;
-export const BOARD_PX = CELL_PX * CONFIG.boardSize;
+export const boardPx = (boardSize: number) => CELL_PX * boardSize;
 export const BLINK_INTERVAL_MS = 100;
 
 export const COLORS = {

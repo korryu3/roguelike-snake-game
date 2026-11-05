@@ -1,3 +1,5 @@
+import type { Tuning } from "../config";
+
 export type Direction = "up" | "down" | "left" | "right";
 
 export type Cell = { readonly x: number; readonly y: number };
@@ -26,6 +28,7 @@ export type RunState = {
   readonly purchased: readonly ModuleId[];
   readonly stageNumber: number;
   readonly rng: RngState;
+  readonly tuning: Tuning;
 };
 
 /** doublePpは、食べたときのPPが2倍になるバッテリー */
@@ -115,4 +118,5 @@ export type RunSetup = {
   readonly totalPp?: number;
   readonly hearts?: readonly Cell[];
   readonly modules?: readonly ModuleId[];
+  readonly tuning?: Tuning;
 };

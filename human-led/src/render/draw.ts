@@ -1,6 +1,6 @@
-import { CENTER } from "../logic/board";
+import { centerOf } from "../logic/board";
 import type { Cell, Game, Movement, StageState } from "../logic/types";
-import { BLINK_INTERVAL_MS, BOARD_PX, CELL_PX, COLORS } from "./style";
+import { BLINK_INTERVAL_MS, boardPx, CELL_PX, COLORS } from "./style";
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -9,8 +9,9 @@ const px = (cell: Cell) => ({ x: cell.x * CELL_PX, y: cell.y * CELL_PX });
 export function drawGame(ctx: Ctx, game: Game): void {
   if (!("stage" in game)) return;
   const { stage } = game;
-  drawGrid(ctx);
-  drawCenter(ctx);
+  const { boardSize } = game.run.tuning.config;
+  drawGrid(ctx, boardPx(boardSize));
+  drawCenter(ctx, centerOf(boardSize));
   drawWalls(ctx, stage.walls);
   drawBattery(ctx, stage.battery);
   if (stage.goal) drawGoal(ctx, stage.goal);
@@ -18,23 +19,23 @@ export function drawGame(ctx: Ctx, game: Game): void {
   drawSnake(ctx, stage.body, "movement" in game ? game.movement : null);
 }
 
-function drawGrid(ctx: Ctx): void {
+function drawGrid(ctx: Ctx, size: number): void {
   ctx.fillStyle = COLORS.floor;
-  ctx.fillRect(0, 0, BOARD_PX, BOARD_PX);
+  ctx.fillRect(0, 0, size, size);
   ctx.strokeStyle = COLORS.gridLine;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  for (let i = 0; i <= BOARD_PX; i += CELL_PX) {
+  for (let i = 0; i <= size; i += CELL_PX) {
     ctx.moveTo(i + 0.5, 0);
-    ctx.lineTo(i + 0.5, BOARD_PX);
+    ctx.lineTo(i + 0.5, size);
     ctx.moveTo(0, i + 0.5);
-    ctx.lineTo(BOARD_PX, i + 0.5);
+    ctx.lineTo(size, i + 0.5);
   }
   ctx.stroke();
 }
 
-function drawCenter(ctx: Ctx): void {
-  const { x, y } = px(CENTER);
+function drawCenter(ctx: Ctx, center: Cell): void {
+  const { x, y } = px(center);
   ctx.fillStyle = COLORS.center;
   ctx.fillRect(x + 1, y + 1, CELL_PX - 1, CELL_PX - 1);
 }

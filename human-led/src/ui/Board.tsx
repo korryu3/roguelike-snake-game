@@ -1,11 +1,12 @@
 import { useLayoutEffect, useRef } from "react";
 import type { Game } from "../logic/types";
 import { drawGame } from "../render/draw";
-import { BOARD_PX } from "../render/style";
+import { boardPx } from "../render/style";
 
 export function Board({ game }: { game: Game }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const dpr = window.devicePixelRatio || 1;
+  const size = boardPx(game.run.tuning.config.boardSize);
 
   useLayoutEffect(() => {
     const ctx = ref.current?.getContext("2d");
@@ -17,9 +18,9 @@ export function Board({ game }: { game: Game }) {
   return (
     <canvas
       ref={ref}
-      width={BOARD_PX * dpr}
-      height={BOARD_PX * dpr}
-      style={{ width: BOARD_PX, height: BOARD_PX, display: "block" }}
+      width={size * dpr}
+      height={size * dpr}
+      style={{ width: size, height: size, display: "block" }}
     />
   );
 }

@@ -1,17 +1,11 @@
-import { CONFIG } from "../config";
 import { pick } from "./rng";
 import type { Cell, Direction, RngState } from "./types";
 
-export const CENTER: Cell = { x: Math.floor(CONFIG.boardSize / 2), y: Math.floor(CONFIG.boardSize / 2) };
+export const centerOf = (boardSize: number): Cell => ({ x: Math.floor(boardSize / 2), y: Math.floor(boardSize / 2) });
 
 export const sameCell = (a: Cell, b: Cell) => a.x === b.x && a.y === b.y;
 
-const ALL_CELLS: readonly Cell[] = Array.from({ length: CONFIG.boardSize ** 2 }, (_, i) => ({
-  x: i % CONFIG.boardSize,
-  y: Math.floor(i / CONFIG.boardSize),
-}));
-
-export const insideBoard = (c: Cell) => c.x >= 0 && c.y >= 0 && c.x < CONFIG.boardSize && c.y < CONFIG.boardSize;
+export const insideBoard = (c: Cell, boardSize: number) => c.x >= 0 && c.y >= 0 && c.x < boardSize && c.y < boardSize;
 
 const DELTA: Record<Direction, Cell> = {
   up: { x: 0, y: -1 },
@@ -29,13 +23,15 @@ export const OPPOSITE: Record<Direction, Direction> = { up: "down", down: "up", 
 
 export const DIRECTIONS: readonly Direction[] = ["up", "down", "left", "right"];
 
-const freeCells = (occupied: readonly Cell[]) => {
-  const blocked = [...occupied, CENTER];
-  return ALL_CELLS.filter((c) => !blocked.some((b) => sameCell(b, c)));
+const freeCells = (occupied: readonly Cell[], boardSize: number) => {
+  const blocked = [...occupied, centerOf(boardSize)];
+  return Array.from({ length: boardSize ** 2 }, (_, i) => ({ x: i % boardSize, y: Math.floor(i / boardSize) })).filter(
+    (c) => !blocked.some((b) => sameCell(b, c)),
+  );
 };
 
-export const hasFreeCell = (occupied: readonly Cell[]) => freeCells(occupied).length > 0;
+export const hasFreeCell = (occupied: readonly Cell[], boardSize: number) => freeCells(occupied, boardSize).length > 0;
 
-export function spawnOnFreeCell(rng: RngState, occupied: readonly Cell[]): [Cell, RngState] {
-  return pick(rng, freeCells(occupied));
+export function spawnOnFreeCell(rng: RngState, occupied: readonly Cell[], boardSize: number): [Cell, RngState] {
+  return pick(rng, freeCells(occupied, boardSize));
 }

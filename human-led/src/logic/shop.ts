@@ -1,13 +1,12 @@
-import { CONFIG, MODULES } from "../config";
+import { MODULE_IDS } from "../config";
 import { effectsOf } from "./modules";
 import { pickDistinct } from "./rng";
-import type { Game, ModuleId, Offer, RunState, StepResult } from "./types";
-
-const ALL_MODULES = Object.keys(MODULES) as ModuleId[];
+import type { Game, Offer, RunState, StepResult } from "./types";
 
 function drawOffers(run: RunState): [Offer[], RunState] {
-  const buyable = ALL_MODULES.filter((id) => run.modules.filter((m) => m === id).length < MODULES[id].maxStack);
-  const [modules, rng] = pickDistinct(run.rng, buyable, CONFIG.shopOfferCount);
+  const { config, modules: specs } = run.tuning;
+  const buyable = MODULE_IDS.filter((id) => run.modules.filter((m) => m === id).length < specs[id].maxStack);
+  const [modules, rng] = pickDistinct(run.rng, buyable, config.shopOfferCount);
   return [modules.map((module) => ({ module, sold: false })), { ...run, rng }];
 }
 
@@ -18,8 +17,10 @@ export function openShop(game: Game): StepResult {
 }
 
 export function reroll(game: Game): StepResult {
-  if (game.phase !== "shop" || game.run.pp < CONFIG.rerollPrice) return { game, events: [] };
-  const [offers, run] = drawOffers({ ...game.run, pp: game.run.pp - CONFIG.rerollPrice });
+  if (game.phase !== "shop") return { game, events: [] };
+  const { rerollPrice } = game.run.tuning.config;
+  if (game.run.pp < rerollPrice) return { game, events: [] };
+  const [offers, run] = drawOffers({ ...game.run, pp: game.run.pp - rerollPrice });
   return { game: { ...game, run, offers }, events: [] };
 }
 
@@ -28,12 +29,14 @@ export function buyModule(game: Game, offerIndex: number): StepResult {
   if (game.phase !== "shop") return unchanged;
   const offer = game.offers[offerIndex];
   const { run } = game;
-  if (offer === undefined || offer.sold || run.pp < MODULES[offer.module].price) return unchanged;
+  if (offer === undefined || offer.sold) return unchanged;
+  const { price } = run.tuning.modules[offer.module];
+  if (run.pp < price) return unchanged;
   const modules = [...run.modules, offer.module];
   const bought = {
     ...run,
-    hp: run.hp + effectsOf(modules).maxHp - effectsOf(run.modules).maxHp,
-    pp: run.pp - MODULES[offer.module].price,
+    hp: run.hp + effectsOf(modules, run.tuning.config).maxHp - effectsOf(run.modules, run.tuning.config).maxHp,
+    pp: run.pp - price,
     modules,
     purchased: [...run.purchased, offer.module],
   };
