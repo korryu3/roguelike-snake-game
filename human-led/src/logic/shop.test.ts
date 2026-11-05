@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CONFIG, MODULES } from "../config";
-import { buyModule, openShop } from "./shop";
+import { buyModule, openShop, reroll } from "./shop";
 import { begin, cleared, offersOf } from "./testing";
 import type { Game, ModuleId, RunSetup, StepResult } from "./types";
 
@@ -93,5 +93,34 @@ describe("buyModule", () => {
   it("モジュールの画面以外で呼ぶと何も変わらない", () => {
     const game = cleared({ pp: 100 });
     expect(buyModule(game, 0)).toEqual({ game, events: [] });
+  });
+});
+
+describe("reroll", () => {
+  it("PPをリロールの値段ぶん払い、3つとも未購入の候補が引き直される", () => {
+    const bought = buyModule(shopWith(), 0).game;
+    const { game } = reroll(bought);
+    expect(game.run.pp).toBe(bought.run.pp - CONFIG.rerollPrice);
+    expect(offersOf(game)).toHaveLength(CONFIG.shopOfferCount);
+    expect(offersOf(game).every((offer) => !offer.sold)).toBe(true);
+  });
+
+  it("引き直すと、候補のモジュールが変わる", () => {
+    const modulesOf = (game: Game) => offersOf(game).map((offer) => offer.module);
+    const changed = seeds.filter((seed) => {
+      const shop = shopWith({}, seed);
+      return JSON.stringify(modulesOf(reroll(shop).game)) !== JSON.stringify(modulesOf(shop));
+    });
+    expect(changed.length).toBeGreaterThan(seeds.length / 2);
+  });
+
+  it("PPが足りなければ何も変わらない", () => {
+    const shop = shopWith({ pp: CONFIG.rerollPrice - 1 });
+    expect(reroll(shop)).toEqual({ game: shop, events: [] });
+  });
+
+  it("モジュールの画面以外で呼ぶと何も変わらない", () => {
+    const game = cleared({ pp: 100 });
+    expect(reroll(game)).toEqual({ game, events: [] });
   });
 });

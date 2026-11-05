@@ -17,6 +17,12 @@ export function openShop(game: Game): StepResult {
   return { game: { phase: "shop", run, offers }, events: [] };
 }
 
+export function reroll(game: Game): StepResult {
+  if (game.phase !== "shop" || game.run.pp < CONFIG.rerollPrice) return { game, events: [] };
+  const [offers, run] = drawOffers({ ...game.run, pp: game.run.pp - CONFIG.rerollPrice });
+  return { game: { ...game, run, offers }, events: [] };
+}
+
 export function buyModule(game: Game, offerIndex: number): StepResult {
   const unchanged = { game, events: [] };
   if (game.phase !== "shop") return unchanged;
