@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { commandOfKey } from "./keys";
+import { commandOfKey, isTypingTarget } from "./keys";
 
 const direction = (d: string) => ({ kind: "direction", direction: d });
 
@@ -20,7 +20,28 @@ describe("commandOfKey", () => {
     expect(commandOfKey("KeyR")).toEqual({ kind: "restart" });
   });
 
+  test("Tはパネルの開閉になる", () => {
+    expect(commandOfKey("KeyT")).toEqual({ kind: "togglePanel" });
+  });
+
   test("ほかのキーは何にもならない", () => {
     expect(["KeyQ", "Space", "Enter"].map(commandOfKey)).toEqual([null, null, null]);
+  });
+});
+
+describe("isTypingTarget", () => {
+  const element = (tagName: string, isContentEditable = false) => ({ tagName, isContentEditable });
+
+  test("入力欄・テキスト欄・選択欄・編集可能な要素へのキーは、ゲームの操作にしない", () => {
+    expect([element("INPUT"), element("TEXTAREA"), element("SELECT"), element("DIV", true)].map(isTypingTarget)).toEqual([
+      true,
+      true,
+      true,
+      true,
+    ]);
+  });
+
+  test("それ以外の要素へのキーは、ゲームの操作にする", () => {
+    expect([element("BODY"), element("BUTTON"), element("CANVAS")].map(isTypingTarget)).toEqual([false, false, false]);
   });
 });

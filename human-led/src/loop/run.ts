@@ -1,5 +1,5 @@
 import { frameElapsedMs } from "./frame";
-import { commandOfKey } from "./keys";
+import { commandOfKey, isTypingTarget } from "./keys";
 import type { Session } from "./session";
 
 export function startLoop(session: Session): void {
@@ -22,6 +22,7 @@ export function startLoop(session: Session): void {
   };
   const onVisibilityChange = () => (document.hidden ? pause() : resume());
   const onKeyDown = (event: KeyboardEvent) => {
+    if (event.target instanceof HTMLElement && isTypingTarget(event.target)) return;
     const command = commandOfKey(event.code);
     if (command === null) return;
     event.preventDefault();

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { CONFIG } from "../config";
+import { CONFIG, DEFAULT_TUNING, type Tuning } from "../config";
 import { startRun } from "../logic/game";
 import { createSession } from "./session";
 
@@ -52,5 +52,58 @@ describe("createSession", () => {
     const playing = session.store.getSnapshot();
     session.command({ kind: "restart" });
     expect(session.store.getSnapshot()).toBe(playing);
+  });
+
+  describe("調整した数値", () => {
+    const short: Tuning = { ...DEFAULT_TUNING, config: { ...DEFAULT_TUNING.config, timeLimitMs: 2_000 } };
+    const fast: Tuning = { ...DEFAULT_TUNING, config: { ...DEFAULT_TUNING.config, moveIntervalMs: 50 } };
+
+    test("渡した数値で最初のランを始める", () => {
+      expect(createSession(seeds(1), short).store.getSnapshot()).toEqual(startRun(1, { tuning: short }));
+    });
+
+    test("Rでやり直すと、今のランの数値のまま新しいシードで始める", () => {
+      const session = createSession(seeds(1, 2), short);
+      session.command({ kind: "direction", direction: "up" });
+      session.advance(0);
+      session.advance(2_000);
+      session.command({ kind: "restart" });
+      expect(session.store.getSnapshot()).toEqual(startRun(2, { tuning: short }));
+    });
+
+    test("数値を指定して始め直すと、どの局面からでもその数値で新しいランになる", () => {
+      const session = createSession(seeds(1, 2), short);
+      session.command({ kind: "direction", direction: "up" });
+      session.advance(0);
+      session.restart(fast);
+      expect(session.store.getSnapshot()).toEqual(startRun(2, { tuning: fast }));
+    });
+  });
+
+  describe("調整パネル", () => {
+    test("パネルを開くと、閉じるまで時間が進まず、方向の入力も受け付けない", () => {
+      const session = createSession(seeds(1));
+      session.command({ kind: "direction", direction: "up" });
+      session.advance(0);
+      const playing = session.store.getSnapshot();
+      session.command({ kind: "togglePanel" });
+      expect(session.panelOpen.getSnapshot()).toBe(true);
+      session.command({ kind: "direction", direction: "left" });
+      session.advance(1_000);
+      expect(session.store.getSnapshot()).toBe(playing);
+      session.command({ kind: "togglePanel" });
+      expect(session.panelOpen.getSnapshot()).toBe(false);
+      session.advance(0);
+      const game = session.store.getSnapshot();
+      if (game.phase !== "playing") throw new Error(game.phase);
+      expect(game.movement.queuedInputs).toEqual([]);
+    });
+
+    test("始め直すとパネルが閉じる", () => {
+      const session = createSession(seeds(1, 2));
+      session.command({ kind: "togglePanel" });
+      session.restart(DEFAULT_TUNING);
+      expect(session.panelOpen.getSnapshot()).toBe(false);
+    });
   });
 });
