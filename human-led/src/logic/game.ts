@@ -29,8 +29,9 @@ function enterStage(run: RunState, setup: RunSetup = {}): Game {
   const [patternWalls, rngAfterWalls] = pick(run.rng, WALL_PATTERNS);
   const walls = setup.walls ?? patternWalls;
   const body: StageState["body"] = [CENTER];
-  const [spawned, rng] = spawnOnFreeCell(rngAfterWalls, [...walls, ...body]);
-  const { timeLimitMs } = effectsOf(run.modules);
+  const effects = effectsOf(run.modules);
+  const [spawned, spawnedKind, rng] = spawnBattery(rngAfterWalls, [...walls, ...body], effects);
+  const { timeLimitMs } = effects;
   return {
     phase: "awaitingStart",
     run: { ...run, modules: consumeAtStageStart(run.modules), rng },
@@ -38,7 +39,7 @@ function enterStage(run: RunState, setup: RunSetup = {}): Game {
       body,
       walls,
       battery: setup.battery ?? spawned,
-      batteryKind: setup.batteryKind ?? "normal",
+      batteryKind: setup.batteryKind ?? spawnedKind,
       goal: setup.goal ?? null,
       hearts: setup.hearts ?? [],
       timeLimitMs,

@@ -59,6 +59,15 @@ describe("nextStage", () => {
     expect(next.run.modules).toEqual([]);
   });
 
+  it("PP2倍のバッテリーを持っていると、ステージの最初のバッテリーもときどきPP2倍になる", () => {
+    const kinds = Array.from({ length: 50 }, (_, i) => {
+      const shop = openShop(cleared({ modules: ["doublePpBattery"] }, i + 1)).game;
+      return stageOf(nextStage(shop).game).batteryKind;
+    });
+    expect(kinds).toContain("doublePp");
+    expect(kinds).toContain("normal");
+  });
+
   it("モジュールの画面以外で呼ぶと何も変わらない", () => {
     const game = cleared();
     expect(nextStage(game)).toEqual({ game, events: [] });
