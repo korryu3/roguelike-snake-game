@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: human-led/package-lock.json
+
+      - name: Install
+        working-directory: human-led
+        run: npm ci
+
+      - name: Test
+        working-directory: human-led
+        run: npm test
+
+      - name: Build
+        working-directory: human-led
+        run: npm run build
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/human-led _site/ai-only
+          cp .github/pages/index.html _site/
+          cp human-led/dist/index.html _site/human-led/
+          cp ai-only/index.html ai-only/logic.js _site/ai-only/
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
