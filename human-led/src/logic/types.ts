@@ -77,8 +77,10 @@ export type Game =
       readonly movement: Movement;
     }
   | { readonly phase: "cleared"; readonly run: RunState; readonly stage: StageState; readonly summary: ClearSummary }
-  | { readonly phase: "shop"; readonly run: RunState }
+  | { readonly phase: "shop"; readonly run: RunState; readonly offers: readonly Offer[] }
   | { readonly phase: "gameOver"; readonly run: RunState; readonly cause: DeathCause };
+
+export type Offer = { readonly module: ModuleId; readonly sold: boolean };
 
 export type Obstacle = "wall" | "body";
 

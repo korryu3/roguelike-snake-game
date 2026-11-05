@@ -31,3 +31,14 @@ export function stageOf(game: Game) {
 }
 
 export const headOf = (game: Game) => stageOf(game).body[0];
+
+/** すぐ右のゴールに入って、クリアの局面になったところ */
+export function cleared(setup: RunSetup = {}, seed = 1): Game {
+  const game = begin("right", { goal: { x: 8, y: 7 }, batteriesEaten: CONFIG.batteriesToGoal, ...setup }, seed);
+  return tick(game).game;
+}
+
+export function offersOf(game: Game) {
+  if (game.phase !== "shop") throw new Error(`モジュールの画面ではない: ${game.phase}`);
+  return game.offers;
+}
