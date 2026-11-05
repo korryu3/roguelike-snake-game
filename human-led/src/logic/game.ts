@@ -1,21 +1,8 @@
 import { CONFIG } from "../config";
+import { CENTER, DIRECTIONS, insideBoard, neighbor, OPPOSITE, sameCell, spawnOnFreeCell } from "./board";
 import { pick } from "./rng";
 import { WALL_PATTERNS } from "./wallPatterns";
-import type { Cell, Direction, Game, GameEvent, Obstacle, RngState, RunSetup, StageState, StepResult } from "./types";
-
-const CENTER: Cell = { x: Math.floor(CONFIG.boardSize / 2), y: Math.floor(CONFIG.boardSize / 2) };
-
-const sameCell = (a: Cell, b: Cell) => a.x === b.x && a.y === b.y;
-
-const ALL_CELLS: readonly Cell[] = Array.from({ length: CONFIG.boardSize ** 2 }, (_, i) => ({
-  x: i % CONFIG.boardSize,
-  y: Math.floor(i / CONFIG.boardSize),
-}));
-
-function spawnOnFreeCell(rng: RngState, occupied: readonly Cell[]): [Cell, RngState] {
-  const blocked = [...occupied, CENTER];
-  return pick(rng, ALL_CELLS.filter((c) => !blocked.some((b) => sameCell(b, c))));
-}
+import type { Cell, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, StageState, StepResult } from "./types";
 
 export function startRun(seed: number, setup: RunSetup = {}): Game {
   const [patternWalls, rngAfterWalls] = pick(seed, WALL_PATTERNS);
@@ -46,18 +33,6 @@ export function startRun(seed: number, setup: RunSetup = {}): Game {
   };
 }
 
-const DELTA: Record<Direction, Cell> = {
-  up: { x: 0, y: -1 },
-  down: { x: 0, y: 1 },
-  left: { x: -1, y: 0 },
-  right: { x: 1, y: 0 },
-};
-
-const neighbor = (cell: Cell, direction: Direction): Cell => ({
-  x: cell.x + DELTA[direction].x,
-  y: cell.y + DELTA[direction].y,
-});
-
 type Playing = Extract<Game, { phase: "playing" }>;
 
 export function step(game: Game, input: readonly Direction[], elapsedMs: number): StepResult {
@@ -65,10 +40,15 @@ export function step(game: Game, input: readonly Direction[], elapsedMs: number)
     case "awaitingStart":
       return { game: startPlaying(game, input), events: [] };
     case "playing":
-      return advance(enqueue(game, input), elapsedMs);
+      return checkTimeUp(advance(enqueue(game, input), elapsedMs));
     default:
       return { game, events: [] };
   }
+}
+
+function checkTimeUp({ game, events }: StepResult): StepResult {
+  if (game.phase !== "playing" || game.stage.remainingMs > 0) return { game, events };
+  return { game: { phase: "gameOver", run: game.run, cause: "timeUp" }, events: [...events, { type: "timeUp" }] };
 }
 
 function startPlaying(game: Extract<Game, { phase: "awaitingStart" }>, input: readonly Direction[]): Game {
@@ -81,8 +61,6 @@ function startPlaying(game: Extract<Game, { phase: "awaitingStart" }>, input: re
     movement: { direction: first, queuedInputs: [], motion: { kind: "moving", sinceLastMoveMs: 0 }, invincibleMs: 0 },
   };
 }
-
-const OPPOSITE: Record<Direction, Direction> = { up: "down", down: "up", left: "right", right: "left" };
 
 function enqueue(game: Playing, input: readonly Direction[]): Playing {
   const queuedInputs = input.reduce<readonly Direction[]>((queue, direction) => {
@@ -99,21 +77,17 @@ function advance(game: Playing, elapsedMs: number): StepResult {
   if (motion.kind === "stunned") return { game: recover(timed, motion.remainingMs - elapsedMs), events: [] };
   const invincibleMs = Math.max(0, timed.movement.invincibleMs - elapsedMs);
   const sinceLastMoveMs = motion.sinceLastMoveMs + elapsedMs;
-  if (sinceLastMoveMs < CONFIG.moveIntervalMs) {
-    return { game: { ...timed, movement: { ...timed.movement, invincibleMs, motion: { kind: "moving", sinceLastMoveMs } } }, events: [] };
-  }
-  const waited: Playing = {
+  const due = sinceLastMoveMs >= CONFIG.moveIntervalMs;
+  const ticked: Playing = {
     ...timed,
     movement: {
       ...timed.movement,
       invincibleMs,
-      motion: { kind: "moving", sinceLastMoveMs: sinceLastMoveMs - CONFIG.moveIntervalMs },
+      motion: { kind: "moving", sinceLastMoveMs: due ? sinceLastMoveMs - CONFIG.moveIntervalMs : sinceLastMoveMs },
     },
   };
-  return moveOneCell(waited);
+  return due ? moveOneCell(ticked) : { game: ticked, events: [] };
 }
-
-const DIRECTIONS: readonly Direction[] = ["up", "down", "left", "right"];
 
 function randomEscape(game: Playing): [Direction, RngState] {
   const safe = DIRECTIONS.filter((d) => obstacleAt(game, neighbor(game.stage.body[0], d)) === null);
@@ -172,8 +146,6 @@ function eatBattery(game: Playing): StepResult {
   };
 }
 
-const insideBoard = (c: Cell) => c.x >= 0 && c.y >= 0 && c.x < CONFIG.boardSize && c.y < CONFIG.boardSize;
-
 function obstacleAt({ stage, run }: Playing, cell: Cell): Obstacle | null {
   if (!insideBoard(cell) || stage.walls.some((w) => sameCell(w, cell))) return "wall";
   const tailLeaves = stage.body.length >= run.length;
@@ -181,6 +153,8 @@ function obstacleAt({ stage, run }: Playing, cell: Cell): Obstacle | null {
   if (blocking.some((b) => sameCell(b, cell))) return "body";
   return null;
 }
+
+const REVIVE_MODULES: readonly ModuleId[] = ["revive", "reviveAtOneHp"];
 
 function collide(game: Playing, obstacle: Obstacle): StepResult {
   if (game.movement.invincibleMs > 0) {
@@ -190,12 +164,17 @@ function collide(game: Playing, obstacle: Obstacle): StepResult {
       events: [{ type: "collided", obstacle, damaged: false }],
     };
   }
+  const run = { ...game.run, hp: game.run.hp - 1 };
+  const collided: GameEvent = { type: "collided", obstacle, damaged: true };
+  if (run.hp <= 0) {
+    const events: GameEvent[] = [collided, { type: "hpDepleted" }];
+    if (run.modules.some((m) => REVIVE_MODULES.includes(m))) {
+      return { game: { phase: "reviveChoice", run, stage: game.stage, movement: game.movement }, events };
+    }
+    return { game: { phase: "gameOver", run, cause: "hp" }, events };
+  }
   return {
-    game: {
-      ...game,
-      run: { ...game.run, hp: game.run.hp - 1 },
-      movement: { ...game.movement, motion: { kind: "stunned", remainingMs: CONFIG.stunMs } },
-    },
-    events: [{ type: "collided", obstacle, damaged: true }],
+    game: { ...game, run, movement: { ...game.movement, motion: { kind: "stunned", remainingMs: CONFIG.stunMs } } },
+    events: [collided],
   };
 }
