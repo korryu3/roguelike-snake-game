@@ -370,6 +370,10 @@ body {
   color: #facc15;
 }
 
+.tuning-note-placeholder {
+  visibility: hidden;
+}
+
 .tuning-actions {
   display: flex;
   flex-wrap: wrap;

@@ -73,7 +73,6 @@ export function createSession(
     },
     restart: (tuning) => {
       store.set(newRun(tuning));
-      panelOpen.set(false);
     },
   };
 }
