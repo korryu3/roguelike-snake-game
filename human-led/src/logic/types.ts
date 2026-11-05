@@ -112,5 +112,7 @@ export type RunSetup = {
   readonly length?: number;
   readonly hp?: number;
   readonly pp?: number;
+  readonly totalPp?: number;
+  readonly hearts?: readonly Cell[];
   readonly modules?: readonly ModuleId[];
 };

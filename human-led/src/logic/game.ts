@@ -1,16 +1,16 @@
 import { CONFIG } from "../config";
-import { CENTER, DIRECTIONS, insideBoard, neighbor, OPPOSITE, sameCell, spawnOnFreeCell } from "./board";
-import { consumeAtStageStart, consumeOne, effectsOf, REVIVE_HP } from "./modules";
+import { CENTER, DIRECTIONS, hasFreeCell, insideBoard, neighbor, OPPOSITE, sameCell, spawnOnFreeCell } from "./board";
+import { consumeAtStageStart, consumeOne, type Effects, effectsOf, REVIVE_HP } from "./modules";
 import { nextFloat, pick } from "./rng";
 import { WALL_PATTERNS } from "./wallPatterns";
-import type { Cell, ClearSummary, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, RunState, StageState, StepResult } from "./types";
+import type { BatteryKind, Cell, ClearSummary, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, RunState, StageState, StepResult } from "./types";
 
 export function startRun(seed: number, setup: RunSetup = {}): Game {
   const run: RunState = {
     length: setup.length ?? CONFIG.initialLength,
     hp: setup.hp ?? CONFIG.initialHp,
     pp: setup.pp ?? 0,
-    totalPp: 0,
+    totalPp: setup.totalPp ?? 0,
     score: 0,
     modules: setup.modules ?? [],
     purchased: [],
@@ -40,7 +40,7 @@ function enterStage(run: RunState, setup: RunSetup = {}): Game {
       battery: setup.battery ?? spawned,
       batteryKind: setup.batteryKind ?? "normal",
       goal: setup.goal ?? null,
-      hearts: [],
+      hearts: setup.hearts ?? [],
       timeLimitMs,
       remainingMs: timeLimitMs,
       batteriesEaten: setup.batteriesEaten ?? 0,
@@ -153,7 +153,17 @@ function moveOneCell(game: Playing): StepResult {
   const moved: Playing = { ...turned, stage: { ...game.stage, body } };
   if (game.stage.goal && sameCell(head, game.stage.goal)) return clearStage(moved);
   if (sameCell(head, game.stage.battery)) return eatBattery(moved);
+  if (game.stage.hearts.some((h) => sameCell(h, head))) return collectHeart(moved, head);
   return { game: moved, events: [] };
+}
+
+function collectHeart(game: Playing, at: Cell): StepResult {
+  const hearts = game.stage.hearts.filter((h) => !sameCell(h, at));
+  const hp = Math.min(game.run.hp + 1, effectsOf(game.run.modules).maxHp);
+  return {
+    game: { ...game, run: { ...game.run, hp }, stage: { ...game.stage, hearts } },
+    events: [{ type: "heartCollected", at }],
+  };
 }
 
 function clearStage({ run, stage }: Playing): StepResult {
@@ -170,31 +180,52 @@ function clearStage({ run, stage }: Playing): StepResult {
 
 function eatBattery(game: Playing): StepResult {
   const { run, stage } = game;
+  const effects = effectsOf(run.modules);
   const events: GameEvent[] = [{ type: "batteryEaten", at: stage.battery }];
-  const occupied = [...stage.walls, ...stage.body, ...(stage.goal ? [stage.goal] : [])];
-  const [battery, rngAfterCell] = spawnOnFreeCell(run.rng, occupied);
-  const [roll, rngAfterBattery] = nextFloat(rngAfterCell);
-  const batteryKind = roll < effectsOf(run.modules).doublePpBatteryChance ? "doublePp" : "normal";
+  const occupied = [...stage.walls, ...stage.body, ...stage.hearts, ...(stage.goal ? [stage.goal] : [])];
+  const [battery, batteryKind, rngAfterBattery] = spawnBattery(run.rng, occupied, effects);
   const batteriesEaten = stage.batteriesEaten + 1;
   const reachedGoal = stage.goal === null && batteriesEaten >= CONFIG.batteriesToGoal;
-  const [goal, rng] = reachedGoal ? spawnOnFreeCell(rngAfterBattery, [...occupied, battery]) : [stage.goal, rngAfterBattery];
+  const [goal, rngAfterGoal] = reachedGoal ? spawnOnFreeCell(rngAfterBattery, [...occupied, battery]) : [stage.goal, rngAfterBattery];
   if (reachedGoal && goal) events.push({ type: "goalAppeared", at: goal });
-  const { batteryMultiplier } = effectsOf(run.modules);
-  const pp = CONFIG.ppPerBattery * batteryMultiplier * (stage.batteryKind === "doublePp" ? 2 : 1);
+  const pp = CONFIG.ppPerBattery * effects.batteryMultiplier * (stage.batteryKind === "doublePp" ? 2 : 1);
+  const totalPp = run.totalPp + pp;
+  const [heartRoll, rngAfterRoll] = nextFloat(rngAfterGoal);
+  const heartCount =
+    Math.floor(totalPp / CONFIG.heartEveryTotalPp) -
+    Math.floor(run.totalPp / CONFIG.heartEveryTotalPp) +
+    (heartRoll < CONFIG.heartWithBatteryChance ? 1 : 0);
+  const [newHearts, rng] = spawnHearts(rngAfterRoll, [...occupied, battery, ...(goal ? [goal] : [])], heartCount);
   return {
     game: {
       ...game,
-      run: {
-        ...run,
-        length: run.length + batteryMultiplier,
-        pp: run.pp + pp,
-        totalPp: run.totalPp + pp,
-        rng,
+      run: { ...run, length: run.length + effects.batteryMultiplier, pp: run.pp + pp, totalPp, rng },
+      stage: {
+        ...stage,
+        battery,
+        batteryKind,
+        goal,
+        hearts: [...stage.hearts, ...newHearts],
+        batteriesEaten,
+        ppEarned: stage.ppEarned + pp,
       },
-      stage: { ...stage, battery, batteryKind, goal, batteriesEaten, ppEarned: stage.ppEarned + pp },
     },
     events,
   };
+}
+
+function spawnBattery(rng: RngState, occupied: readonly Cell[], effects: Effects): [Cell, BatteryKind, RngState] {
+  const [cell, rngAfterCell] = spawnOnFreeCell(rng, occupied);
+  const [roll, next] = nextFloat(rngAfterCell);
+  return [cell, roll < effects.doublePpBatteryChance ? "doublePp" : "normal", next];
+}
+
+/** 空きマスがなくなったら、そこで出すのをやめる */
+function spawnHearts(rng: RngState, occupied: readonly Cell[], count: number): [Cell[], RngState] {
+  if (count <= 0 || !hasFreeCell(occupied)) return [[], rng];
+  const [heart, next] = spawnOnFreeCell(rng, occupied);
+  const [rest, last] = spawnHearts(next, [...occupied, heart], count - 1);
+  return [[heart, ...rest], last];
 }
 
 function obstacleAt({ stage, run }: Playing, cell: Cell): Obstacle | null {

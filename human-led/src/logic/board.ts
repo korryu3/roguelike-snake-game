@@ -29,7 +29,13 @@ export const OPPOSITE: Record<Direction, Direction> = { up: "down", down: "up", 
 
 export const DIRECTIONS: readonly Direction[] = ["up", "down", "left", "right"];
 
-export function spawnOnFreeCell(rng: RngState, occupied: readonly Cell[]): [Cell, RngState] {
+const freeCells = (occupied: readonly Cell[]) => {
   const blocked = [...occupied, CENTER];
-  return pick(rng, ALL_CELLS.filter((c) => !blocked.some((b) => sameCell(b, c))));
+  return ALL_CELLS.filter((c) => !blocked.some((b) => sameCell(b, c)));
+};
+
+export const hasFreeCell = (occupied: readonly Cell[]) => freeCells(occupied).length > 0;
+
+export function spawnOnFreeCell(rng: RngState, occupied: readonly Cell[]): [Cell, RngState] {
+  return pick(rng, freeCells(occupied));
 }
