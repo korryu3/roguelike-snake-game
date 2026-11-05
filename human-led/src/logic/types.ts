@@ -33,8 +33,10 @@ export type StageState = {
   readonly battery: Cell;
   readonly goal: Cell | null;
   readonly hearts: readonly Cell[];
+  readonly timeLimitMs: number;
   readonly remainingMs: number;
   readonly batteriesEaten: number;
+  readonly ppEarned: number;
 };
 
 export type Motion =
@@ -51,6 +53,15 @@ export type Movement = {
 
 export type DeathCause = "hp" | "timeUp";
 
+/** クリアのモーダルに出す、そのステージの結果 */
+export type ClearSummary = {
+  readonly stageNumber: number;
+  readonly ppEarned: number;
+  readonly batteryScore: number;
+  readonly timeBonus: number;
+  readonly elapsedMs: number;
+};
+
 export type Game =
   | { readonly phase: "awaitingStart"; readonly run: RunState; readonly stage: StageState }
   | {
@@ -65,7 +76,7 @@ export type Game =
       readonly stage: StageState;
       readonly movement: Movement;
     }
-  | { readonly phase: "cleared"; readonly run: RunState; readonly stage: StageState }
+  | { readonly phase: "cleared"; readonly run: RunState; readonly stage: StageState; readonly summary: ClearSummary }
   | { readonly phase: "shop"; readonly run: RunState }
   | { readonly phase: "gameOver"; readonly run: RunState; readonly cause: DeathCause };
 

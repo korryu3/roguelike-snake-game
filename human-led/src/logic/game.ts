@@ -2,7 +2,7 @@ import { CONFIG } from "../config";
 import { CENTER, DIRECTIONS, insideBoard, neighbor, OPPOSITE, sameCell, spawnOnFreeCell } from "./board";
 import { pick } from "./rng";
 import { WALL_PATTERNS } from "./wallPatterns";
-import type { Cell, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, StageState, StepResult } from "./types";
+import type { Cell, ClearSummary, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, StageState, StepResult } from "./types";
 
 export function startRun(seed: number, setup: RunSetup = {}): Game {
   const [patternWalls, rngAfterWalls] = pick(seed, WALL_PATTERNS);
@@ -27,8 +27,10 @@ export function startRun(seed: number, setup: RunSetup = {}): Game {
       battery: setup.battery ?? spawned,
       goal: setup.goal ?? null,
       hearts: [],
+      timeLimitMs: CONFIG.timeLimitMs,
       remainingMs: CONFIG.timeLimitMs,
       batteriesEaten: setup.batteriesEaten ?? 0,
+      ppEarned: 0,
     },
   };
 }
@@ -114,11 +116,21 @@ function moveOneCell(game: Playing): StepResult {
   if (obstacle) return collide(turned, obstacle);
   const body: StageState["body"] = [head, ...current.slice(0, game.run.length - 1)];
   const moved: Playing = { ...turned, stage: { ...game.stage, body } };
-  if (game.stage.goal && sameCell(head, game.stage.goal)) {
-    return { game: { phase: "cleared", run: moved.run, stage: moved.stage }, events: [{ type: "cleared" }] };
-  }
+  if (game.stage.goal && sameCell(head, game.stage.goal)) return clearStage(moved);
   if (sameCell(head, game.stage.battery)) return eatBattery(moved);
   return { game: moved, events: [] };
+}
+
+function clearStage({ run, stage }: Playing): StepResult {
+  const summary: ClearSummary = {
+    stageNumber: run.stageNumber,
+    ppEarned: stage.ppEarned,
+    batteryScore: stage.batteriesEaten * CONFIG.scorePerBattery,
+    timeBonus: Math.floor(stage.remainingMs / 1000) * CONFIG.timeBonusPerSecond,
+    elapsedMs: stage.timeLimitMs - stage.remainingMs,
+  };
+  const scored = { ...run, score: run.score + summary.batteryScore + summary.timeBonus };
+  return { game: { phase: "cleared", run: scored, stage, summary }, events: [{ type: "cleared" }] };
 }
 
 function eatBattery(game: Playing): StepResult {
@@ -140,7 +152,7 @@ function eatBattery(game: Playing): StepResult {
         totalPp: run.totalPp + CONFIG.ppPerBattery,
         rng,
       },
-      stage: { ...stage, battery, goal, batteriesEaten },
+      stage: { ...stage, battery, goal, batteriesEaten, ppEarned: stage.ppEarned + CONFIG.ppPerBattery },
     },
     events,
   };
