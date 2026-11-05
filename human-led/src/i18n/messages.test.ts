@@ -16,7 +16,7 @@ describe("MESSAGES", () => {
       "Stage 3",
       "12 PP",
       "Reroll (2 PP)",
-      "Stage 4 cleared",
+      "Stage 4 Cleared",
     ]);
   });
 

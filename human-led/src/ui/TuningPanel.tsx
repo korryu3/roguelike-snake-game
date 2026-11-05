@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { DEFAULT_TUNING, MODULE_IDS, type Config, type ModuleSpec, type Tuning } from "../config";
 import type { ModuleId } from "../logic/types";
-import { CONFIG_FIELDS, CONFIG_KEYS, FIELD_BY_PATH, MODULE_LABELS, MODULE_SPEC_FIELDS, type Rule, SPEC_KEYS } from "../tuning/fields";
+import { MESSAGES } from "../i18n/messages";
+import { CONFIG_FIELDS, CONFIG_KEYS, FIELD_BY_PATH, MODULE_SPEC_FIELDS, type Rule, SPEC_KEYS } from "../tuning/fields";
 import { parseTuningJson, satisfies, type TuningIssue } from "../tuning/parse";
 
 type Props = {
@@ -39,7 +40,7 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
       await navigator.clipboard.writeText(text);
       setMessages(["JSONをクリップボードにコピーした"]);
     } catch {
-      setMessages(["クリップボードが使えない。下の欄を選択してコピーしてください"]);
+      setMessages(["クリップボードが使えない。下の欄を選択してコピーする"]);
       requestAnimationFrame(() => jsonRef.current?.select());
     }
   };
@@ -91,7 +92,7 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
           </div>
           {MODULE_IDS.map((id) => (
             <div key={id} className="tuning-module">
-              <span>{MODULE_LABELS[id]}</span>
+              <span>{MESSAGES.ja.modules[id].name}</span>
               {SPEC_KEYS.map((key) => (
                 <NumberInput
                   key={key}

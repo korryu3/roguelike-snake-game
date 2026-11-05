@@ -1,5 +1,5 @@
 import { type Config, DEFAULT_TUNING, MODULE_IDS, type ModuleSpec } from "../config";
-import type { ModuleId } from "../logic/types";
+import { MESSAGES } from "../i18n/messages";
 
 export type Rule = { readonly min: number; readonly max: number; readonly integer: boolean };
 
@@ -23,28 +23,17 @@ export const CONFIG_FIELDS: Readonly<Record<keyof Config, ConfigField>> = {
   heartEveryTotalPp: { label: "ハートが出る累計PPの間隔", group: "ステージ", rule: count(1) },
   heartWithBatteryChance: { label: "食べたときにハートが出る確率", group: "ステージ", rule: PROBABILITY },
   scorePerBattery: { label: "バッテリー1個のスコア", group: "スコア", rule: count(0) },
-  timeBonusPerSecond: { label: "残り1秒の時間ボーナス", group: "スコア", rule: count(0) },
+  timeBonusPerSecond: { label: "残り1秒のタイムボーナス", group: "スコア", rule: count(0) },
   shopOfferCount: { label: "候補の数", group: "モジュールの画面", rule: count(0) },
   rerollPrice: { label: "リロールの値段", group: "モジュールの画面", rule: count(0) },
-  timeLimitPlusMs: { label: "制限時間＋の延長（ms）", group: "モジュールの効果", rule: count(0) },
-  timeLimitBoostMs: { label: "一時延長の延長（ms）", group: "モジュールの効果", rule: count(0) },
+  timeLimitPlusMs: { label: "制限時間延長（永続）の秒数（ms）", group: "モジュールの効果", rule: count(0) },
+  timeLimitBoostMs: { label: "制限時間延長（次のステージ）の秒数（ms）", group: "モジュールの効果", rule: count(0) },
   doublePpBatteryChancePerStack: { label: "PP2倍のバッテリーの確率（1個あたり）", group: "モジュールの効果", rule: PROBABILITY },
 };
 
 export const MODULE_SPEC_FIELDS: Readonly<Record<keyof ModuleSpec, { readonly label: string; readonly rule: Rule }>> = {
   price: { label: "値段", rule: count(0) },
   maxStack: { label: "上限", rule: count(0) },
-};
-
-export const MODULE_LABELS: Readonly<Record<ModuleId, string>> = {
-  doublePpAndGrowth: "PP・伸び2倍",
-  revive: "1回生き返る",
-  reviveAtOneHp: "1回生き返る（デメリット付き）",
-  timeLimitPlus5s: "制限時間＋5秒",
-  timeLimitBoostNextStage: "制限時間の一時延長",
-  wallDamageImmunity: "壁ダメージ無効",
-  maxHpPlus1: "HPの上限＋1",
-  doublePpBattery: "PP2倍のバッテリー",
 };
 
 export const CONFIG_KEYS = Object.keys(DEFAULT_TUNING.config) as readonly (keyof Config)[];
@@ -58,7 +47,7 @@ export const FIELD_BY_PATH: ReadonlyMap<string, Field> = new Map<string, Field>(
   ...MODULE_IDS.flatMap((id) =>
     SPEC_KEYS.map((key): [string, Field] => [
       `modules.${id}.${key}`,
-      { label: `${MODULE_LABELS[id]}の${MODULE_SPEC_FIELDS[key].label}`, rule: MODULE_SPEC_FIELDS[key].rule },
+      { label: `${MESSAGES.ja.modules[id].name}の${MODULE_SPEC_FIELDS[key].label}`, rule: MODULE_SPEC_FIELDS[key].rule },
     ]),
   ),
 ]);
