@@ -14,10 +14,11 @@ export function startRun(seed: number, setup: RunSetup = {}): Game {
     run: {
       length: setup.length ?? CONFIG.initialLength,
       hp: setup.hp ?? CONFIG.initialHp,
-      pp: 0,
+      pp: setup.pp ?? 0,
       totalPp: 0,
       score: 0,
       modules: setup.modules ?? [],
+      purchased: [],
       stageNumber: 1,
       rng,
     },

@@ -22,6 +22,8 @@ export type RunState = {
   readonly score: number;
   /** 1回買うごとに1要素。使い切るものは、使うと要素が1つ減る */
   readonly modules: readonly ModuleId[];
+  /** ゲームオーバー画面に出す、ラン中に買ったモジュールの記録。使っても減らない */
+  readonly purchased: readonly ModuleId[];
   readonly stageNumber: number;
   readonly rng: RngState;
 };
@@ -104,5 +106,6 @@ export type RunSetup = {
   readonly batteriesEaten?: number;
   readonly length?: number;
   readonly hp?: number;
+  readonly pp?: number;
   readonly modules?: readonly ModuleId[];
 };
