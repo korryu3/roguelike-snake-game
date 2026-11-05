@@ -16,16 +16,12 @@ describe("commandOfKey", () => {
     );
   });
 
-  test("Rはやり直しになる", () => {
-    expect(commandOfKey("KeyR")).toEqual({ kind: "restart" });
-  });
-
   test("Tはパネルの開閉になる", () => {
     expect(commandOfKey("KeyT")).toEqual({ kind: "togglePanel" });
   });
 
   test("ほかのキーは何にもならない", () => {
-    expect(["KeyQ", "Space", "Enter"].map(commandOfKey)).toEqual([null, null, null]);
+    expect(["KeyQ", "KeyR", "Space", "Enter"].map(commandOfKey)).toEqual([null, null, null, null]);
   });
 });
 
