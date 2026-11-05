@@ -1,7 +1,7 @@
 import { CONFIG } from "../config";
 import { pick } from "./rng";
 import { WALL_PATTERNS } from "./wallPatterns";
-import type { Cell, Direction, Game, GameEvent, RngState, RunSetup, StageState, StepResult } from "./types";
+import type { Cell, Direction, Game, GameEvent, Obstacle, RngState, RunSetup, StageState, StepResult } from "./types";
 
 const CENTER: Cell = { x: Math.floor(CONFIG.boardSize / 2), y: Math.floor(CONFIG.boardSize / 2) };
 
@@ -96,25 +96,50 @@ function enqueue(game: Playing, input: readonly Direction[]): Playing {
 function advance(game: Playing, elapsedMs: number): StepResult {
   const timed: Playing = { ...game, stage: { ...game.stage, remainingMs: game.stage.remainingMs - elapsedMs } };
   const { motion } = timed.movement;
-  if (motion.kind !== "moving") return { game: timed, events: [] };
+  if (motion.kind === "stunned") return { game: recover(timed, motion.remainingMs - elapsedMs), events: [] };
+  const invincibleMs = Math.max(0, timed.movement.invincibleMs - elapsedMs);
   const sinceLastMoveMs = motion.sinceLastMoveMs + elapsedMs;
   if (sinceLastMoveMs < CONFIG.moveIntervalMs) {
-    return { game: { ...timed, movement: { ...timed.movement, motion: { kind: "moving", sinceLastMoveMs } } }, events: [] };
+    return { game: { ...timed, movement: { ...timed.movement, invincibleMs, motion: { kind: "moving", sinceLastMoveMs } } }, events: [] };
   }
   const waited: Playing = {
     ...timed,
-    movement: { ...timed.movement, motion: { kind: "moving", sinceLastMoveMs: sinceLastMoveMs - CONFIG.moveIntervalMs } },
+    movement: {
+      ...timed.movement,
+      invincibleMs,
+      motion: { kind: "moving", sinceLastMoveMs: sinceLastMoveMs - CONFIG.moveIntervalMs },
+    },
   };
   return moveOneCell(waited);
 }
 
+const DIRECTIONS: readonly Direction[] = ["up", "down", "left", "right"];
+
+function randomEscape(game: Playing): [Direction, RngState] {
+  const safe = DIRECTIONS.filter((d) => obstacleAt(game, neighbor(game.stage.body[0], d)) === null);
+  return pick(game.run.rng, safe.length > 0 ? safe : DIRECTIONS);
+}
+
+function recover(game: Playing, remainingMs: number): Playing {
+  if (remainingMs > 0) return { ...game, movement: { ...game.movement, motion: { kind: "stunned", remainingMs } } };
+  const queued = game.movement.queuedInputs.at(-1);
+  const [direction, rng] = queued ? [queued, game.run.rng] : randomEscape(game);
+  return {
+    ...game,
+    run: { ...game.run, rng },
+    movement: { direction, queuedInputs: [], motion: { kind: "moving", sinceLastMoveMs: 0 }, invincibleMs: CONFIG.invincibleMs },
+  };
+}
+
 function moveOneCell(game: Playing): StepResult {
   const [next, ...rest] = game.movement.queuedInputs;
-  const direction = next ?? game.movement.direction;
+  const turned: Playing = { ...game, movement: { ...game.movement, direction: next ?? game.movement.direction, queuedInputs: rest } };
   const { body: current } = game.stage;
-  const head = neighbor(current[0], direction);
+  const head = neighbor(current[0], turned.movement.direction);
+  const obstacle = obstacleAt(game, head);
+  if (obstacle) return collide(turned, obstacle);
   const body: StageState["body"] = [head, ...current.slice(0, game.run.length - 1)];
-  const moved: Playing = { ...game, stage: { ...game.stage, body }, movement: { ...game.movement, direction, queuedInputs: rest } };
+  const moved: Playing = { ...turned, stage: { ...game.stage, body } };
   if (game.stage.goal && sameCell(head, game.stage.goal)) {
     return { game: { phase: "cleared", run: moved.run, stage: moved.stage }, events: [{ type: "cleared" }] };
   }
@@ -144,5 +169,33 @@ function eatBattery(game: Playing): StepResult {
       stage: { ...stage, battery, goal, batteriesEaten },
     },
     events,
+  };
+}
+
+const insideBoard = (c: Cell) => c.x >= 0 && c.y >= 0 && c.x < CONFIG.boardSize && c.y < CONFIG.boardSize;
+
+function obstacleAt({ stage, run }: Playing, cell: Cell): Obstacle | null {
+  if (!insideBoard(cell) || stage.walls.some((w) => sameCell(w, cell))) return "wall";
+  const tailLeaves = stage.body.length >= run.length;
+  const blocking = tailLeaves ? stage.body.slice(0, -1) : stage.body;
+  if (blocking.some((b) => sameCell(b, cell))) return "body";
+  return null;
+}
+
+function collide(game: Playing, obstacle: Obstacle): StepResult {
+  if (game.movement.invincibleMs > 0) {
+    const [direction, rng] = randomEscape(game);
+    return {
+      game: { ...game, run: { ...game.run, rng }, movement: { ...game.movement, direction } },
+      events: [{ type: "collided", obstacle, damaged: false }],
+    };
+  }
+  return {
+    game: {
+      ...game,
+      run: { ...game.run, hp: game.run.hp - 1 },
+      movement: { ...game.movement, motion: { kind: "stunned", remainingMs: CONFIG.stunMs } },
+    },
+    events: [{ type: "collided", obstacle, damaged: true }],
   };
 }
