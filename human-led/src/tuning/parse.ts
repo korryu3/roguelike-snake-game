@@ -1,6 +1,6 @@
 import { DEFAULT_TUNING, MODULE_IDS, type Config, type ModuleSpec, type Tuning } from "../config";
 import type { ModuleId } from "../logic/types";
-import { CONFIG_FIELDS, MODULE_SPEC_FIELDS, type Rule } from "./fields";
+import { CONFIG_FIELDS, CONFIG_KEYS, MODULE_SPEC_FIELDS, type Rule, SPEC_KEYS } from "./fields";
 
 /** unknownは知らない項目で捨てた、invalidは使えない値で既定値に戻した */
 export type TuningIssue = { readonly path: string; readonly kind: "unknown" | "invalid" };
@@ -19,9 +19,6 @@ export const satisfies = (rule: Rule, value: unknown): value is number =>
   value >= rule.min &&
   value <= rule.max &&
   (!rule.integer || Number.isInteger(value));
-
-const CONFIG_KEYS = Object.keys(CONFIG_FIELDS) as (keyof Config)[];
-const SPEC_KEYS = Object.keys(MODULE_SPEC_FIELDS) as (keyof ModuleSpec)[];
 
 /** 外から来た文字列を、既定値の形に合わせて検査する。足りない項目は既定値で埋める */
 export function parseTuningJson(text: string): ParseResult {

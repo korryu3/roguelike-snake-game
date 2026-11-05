@@ -13,6 +13,11 @@ describe("parseTuningJson", () => {
     expect(parsed(DEFAULT_TUNING)).toEqual({ ok: true, tuning: DEFAULT_TUNING, issues: [] });
   });
 
+  test("項目の順番が違っても、読み込んだものを書き出すと既定値を書き出したものと同じ文字列になる", () => {
+    const reversed = { modules: DEFAULT_TUNING.modules, config: Object.fromEntries(Object.entries(DEFAULT_TUNING.config).reverse()) };
+    expect(JSON.stringify(parsed(reversed).tuning)).toBe(JSON.stringify(DEFAULT_TUNING));
+  });
+
   test("書かれていない項目は既定値になり、問題にしない", () => {
     const result = parsed({ config: { moveIntervalMs: 90 }, modules: { revive: { price: 1 } } });
     expect(result.tuning.config).toEqual({ ...DEFAULT_TUNING.config, moveIntervalMs: 90 });

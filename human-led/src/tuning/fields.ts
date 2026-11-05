@@ -1,4 +1,4 @@
-import type { Config, ModuleSpec } from "../config";
+import { type Config, DEFAULT_TUNING, MODULE_IDS, type ModuleSpec } from "../config";
 import type { ModuleId } from "../logic/types";
 
 export type Rule = { readonly min: number; readonly max: number; readonly integer: boolean };
@@ -46,3 +46,19 @@ export const MODULE_LABELS: Readonly<Record<ModuleId, string>> = {
   maxHpPlus1: "HPの上限＋1",
   doublePpBattery: "PP2倍のバッテリー",
 };
+
+export const CONFIG_KEYS = Object.keys(DEFAULT_TUNING.config) as readonly (keyof Config)[];
+export const SPEC_KEYS = Object.keys(MODULE_SPEC_FIELDS) as readonly (keyof ModuleSpec)[];
+
+/** JSONの中の位置（`config.moveIntervalMs`、`modules.revive.price`）から、項目の名前と決まりを引く */
+type Field = { readonly label: string; readonly rule: Rule };
+
+export const FIELD_BY_PATH: ReadonlyMap<string, Field> = new Map<string, Field>([
+  ...CONFIG_KEYS.map((key): [string, Field] => [`config.${key}`, CONFIG_FIELDS[key]]),
+  ...MODULE_IDS.flatMap((id) =>
+    SPEC_KEYS.map((key): [string, Field] => [
+      `modules.${id}.${key}`,
+      { label: `${MODULE_LABELS[id]}の${MODULE_SPEC_FIELDS[key].label}`, rule: MODULE_SPEC_FIELDS[key].rule },
+    ]),
+  ),
+]);
