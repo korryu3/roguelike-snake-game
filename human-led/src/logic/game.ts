@@ -1,6 +1,6 @@
 import { CONFIG } from "../config";
 import { CENTER, DIRECTIONS, insideBoard, neighbor, OPPOSITE, sameCell, spawnOnFreeCell } from "./board";
-import { consumeAtStageStart, effectsOf } from "./modules";
+import { consumeAtStageStart, effectsOf, REVIVE_HP } from "./modules";
 import { pick } from "./rng";
 import { WALL_PATTERNS } from "./wallPatterns";
 import type { Cell, ClearSummary, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, RunState, StageState, StepResult } from "./types";
@@ -46,6 +46,28 @@ function enterStage(run: RunState, setup: RunSetup = {}): Game {
       ppEarned: 0,
     },
   };
+}
+
+export function revive(game: Game, module: ModuleId): StepResult {
+  if (game.phase !== "reviveChoice") return { game, events: [] };
+  const index = game.run.modules.indexOf(module);
+  const modules = game.run.modules.filter((_, i) => i !== index);
+  const reviveHp = REVIVE_HP[module];
+  if (reviveHp === undefined || index < 0) return { game, events: [] };
+  return {
+    game: {
+      phase: "playing",
+      run: { ...game.run, hp: reviveHp(effectsOf(game.run.modules).maxHp), modules },
+      stage: game.stage,
+      movement: { ...game.movement, motion: { kind: "moving", sinceLastMoveMs: 0 }, invincibleMs: CONFIG.invincibleMs },
+    },
+    events: [{ type: "revived" }],
+  };
+}
+
+export function giveUp(game: Game): StepResult {
+  if (game.phase !== "reviveChoice") return { game, events: [] };
+  return { game: { phase: "gameOver", run: game.run, cause: "hp" }, events: [] };
 }
 
 type Playing = Extract<Game, { phase: "playing" }>;
@@ -179,7 +201,6 @@ function obstacleAt({ stage, run }: Playing, cell: Cell): Obstacle | null {
   return null;
 }
 
-const REVIVE_MODULES: readonly ModuleId[] = ["revive", "reviveAtOneHp"];
 
 function collide(game: Playing, obstacle: Obstacle): StepResult {
   if (game.movement.invincibleMs > 0) {
@@ -193,7 +214,7 @@ function collide(game: Playing, obstacle: Obstacle): StepResult {
   const collided: GameEvent = { type: "collided", obstacle, damaged: true };
   if (run.hp <= 0) {
     const events: GameEvent[] = [collided, { type: "hpDepleted" }];
-    if (run.modules.some((m) => REVIVE_MODULES.includes(m))) {
+    if (run.modules.some((m) => REVIVE_HP[m])) {
       return { game: { phase: "reviveChoice", run, stage: game.stage, movement: game.movement }, events };
     }
     return { game: { phase: "gameOver", run, cause: "hp" }, events };

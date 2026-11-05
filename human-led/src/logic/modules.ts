@@ -14,5 +14,11 @@ export function effectsOf(modules: readonly ModuleId[]): Effects {
   };
 }
 
+/** 生き返るモジュールごとの、生き返ったときのHP */
+export const REVIVE_HP: Partial<Record<ModuleId, (maxHp: number) => number>> = {
+  revive: (maxHp) => maxHp,
+  reviveAtOneHp: () => 1,
+};
+
 /** ステージの開始時に使い切るモジュールを外す */
 export const consumeAtStageStart = (modules: readonly ModuleId[]) => modules.filter((m) => m !== "timeLimitBoostNextStage");
