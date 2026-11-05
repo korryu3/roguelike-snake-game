@@ -28,7 +28,7 @@ export type RunState = {
 
 export type StageState = {
   /** 先頭が頭 */
-  readonly body: readonly Cell[];
+  readonly body: readonly [Cell, ...Cell[]];
   readonly walls: readonly Cell[];
   readonly battery: Cell;
   readonly goal: Cell | null;
