@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { CONFIG } from "../config";
+import { CONFIG, DEFAULT_TUNING, type Tuning } from "../config";
+import { centerOf } from "./board";
 import { startRun } from "./game";
+import { checkWallPattern, placeWallPattern } from "./wallPatterns";
 import type { Cell } from "./types";
 
-const CENTER: Cell = { x: 7, y: 7 };
+const CENTER: Cell = centerOf(CONFIG.boardSize);
 const sameCell = (a: Cell, b: Cell) => a.x === b.x && a.y === b.y;
 const seeds = Array.from({ length: 50 }, (_, i) => i + 1);
 
@@ -77,5 +79,29 @@ describe("startRun", () => {
       }),
     );
     expect(positions.size).toBeGreaterThan(1);
+  });
+
+  it("ステージの壁は、数値に入っているパターンのどれかから作る", () => {
+    const patterns = [["#.....#", ".......", ".......", ".......", ".......", ".......", "#.....#"], ["...#..."]];
+    const tuning: Tuning = { ...DEFAULT_TUNING, wallPatterns: patterns };
+    const placed = patterns.map((p) => placeWallPattern(p, CONFIG.boardSize));
+    const seen = seeds.map((seed) => {
+      const game = startRun(seed, { tuning });
+      if (game.phase !== "awaitingStart") throw new Error(game.phase);
+      return game.stage.walls;
+    });
+    for (const walls of seen) expect(placed).toContainEqual(walls);
+    for (const walls of placed) expect(seen).toContainEqual(walls);
+  });
+
+  it("既定の盤面は19×19で、頭は(9,9)に置かれる", () => {
+    expect(CONFIG.boardSize).toBe(19);
+    const game = startRun(1);
+    if (game.phase !== "awaitingStart") throw new Error(game.phase);
+    expect(game.stage.body).toEqual([{ x: 9, y: 9 }]);
+  });
+
+  it("既定のパターンはどれも検査を通る", () => {
+    for (const pattern of DEFAULT_TUNING.wallPatterns) expect(checkWallPattern(pattern)).toBeNull();
   });
 });

@@ -1,5 +1,6 @@
 import { DEFAULT_TUNING, MODULE_IDS, type Config, type ModuleSpec, type Tuning } from "../config";
-import type { ModuleId } from "../logic/types";
+import type { ModuleId, WallPattern } from "../logic/types";
+import { checkWallPattern } from "../logic/wallPatterns";
 import { CONFIG_FIELDS, CONFIG_KEYS, MODULE_SPEC_FIELDS, type Rule, SPEC_KEYS } from "./fields";
 
 /** unknownは知らない項目で捨てた、invalidは使えない値で既定値に戻した */
@@ -48,7 +49,7 @@ export function parseTuningJson(text: string): ParseResult {
     return fallback;
   };
 
-  const root = section("", input, ["config", "modules"]);
+  const root = section("", input, ["config", "modules", "wallPatterns"]);
   const config = section("config", root.config, CONFIG_KEYS);
   const modules = section("modules", root.modules, MODULE_IDS);
   const specOf = (id: ModuleId): ModuleSpec => {
@@ -63,6 +64,26 @@ export function parseTuningJson(text: string): ParseResult {
       CONFIG_KEYS.map((key) => [key, value(`config.${key}`, CONFIG_FIELDS[key].rule, config[key], DEFAULT_TUNING.config[key])]),
     ) as Config,
     modules: Object.fromEntries(MODULE_IDS.map((id) => [id, specOf(id)])) as Tuning["modules"],
+    wallPatterns: wallPatternsOf(root.wallPatterns, issues),
   };
   return { ok: true, tuning, issues };
+}
+
+const isPattern = (value: unknown): value is WallPattern =>
+  Array.isArray(value) && value.every((row) => typeof row === "string") && checkWallPattern(value) === null;
+
+/** 使えないパターンは捨てる。1つも残らなければ既定のパターンにする */
+function wallPatternsOf(given: unknown, issues: TuningIssue[]): readonly WallPattern[] {
+  if (given === undefined) return DEFAULT_TUNING.wallPatterns;
+  const fallback = () => {
+    issues.push({ path: "wallPatterns", kind: "invalid" });
+    return DEFAULT_TUNING.wallPatterns;
+  };
+  if (!Array.isArray(given)) return fallback();
+  const usable = given.filter((pattern, i) => {
+    if (isPattern(pattern)) return true;
+    issues.push({ path: `wallPatterns.${i}`, kind: "invalid" });
+    return false;
+  });
+  return usable.length > 0 ? usable : fallback();
 }

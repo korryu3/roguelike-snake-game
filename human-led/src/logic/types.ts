@@ -4,6 +4,11 @@ export type Direction = "up" | "down" | "left" | "right";
 
 export type Cell = { readonly x: number; readonly y: number };
 
+/** 壁のパターン。1要素が盤面の1行で、`#`が壁、`.`が床 */
+export type WallPattern = readonly string[];
+
+export type WallPatternIssue = "empty" | "badChar" | "notRectangular" | "blocksCenter";
+
 export type RngState = number;
 
 export type ModuleId =

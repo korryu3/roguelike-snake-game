@@ -88,4 +88,44 @@ describe("parseTuningJson", () => {
   test("一番外がオブジェクトでなければ、読み込みの失敗として返す", () => {
     for (const text of ["null", "[]", "3", '"x"']) expect(parseTuningJson(text)).toEqual({ ok: false, reason: "notObject" });
   });
+
+  test("壁のパターンが書かれていなければ、既定のパターンになり、問題にしない", () => {
+    const result = parsed({ config: {} });
+    expect(result.tuning.wallPatterns).toEqual(DEFAULT_TUNING.wallPatterns);
+    expect(result.issues).toEqual([]);
+  });
+
+  test("書かれた壁のパターンを読み込む", () => {
+    const patterns = [["#...#"], ["....."]];
+    const result = parsed({ wallPatterns: patterns });
+    expect(result.tuning.wallPatterns).toEqual(patterns);
+    expect(result.issues).toEqual([]);
+  });
+
+  test("検査を通らない壁のパターンは捨て、問題として返す", () => {
+    const result = parsed({ wallPatterns: [["#...#"], ["..#.."], ["#..x#"], [1, 2], "....."] });
+    expect(result.tuning.wallPatterns).toEqual([["#...#"]]);
+    expect(result.issues).toEqual([
+      { path: "wallPatterns.1", kind: "invalid" },
+      { path: "wallPatterns.2", kind: "invalid" },
+      { path: "wallPatterns.3", kind: "invalid" },
+      { path: "wallPatterns.4", kind: "invalid" },
+    ]);
+  });
+
+  test("壁のパターンが配列でなければ、既定のパターンにし、問題として返す", () => {
+    const result = parsed({ wallPatterns: "#...#" });
+    expect(result.tuning.wallPatterns).toEqual(DEFAULT_TUNING.wallPatterns);
+    expect(result.issues).toEqual([{ path: "wallPatterns", kind: "invalid" }]);
+  });
+
+  test("使える壁のパターンが1つも残らなければ、既定のパターンにし、問題として返す", () => {
+    expect(parsed({ wallPatterns: [] }).issues).toEqual([{ path: "wallPatterns", kind: "invalid" }]);
+    const result = parsed({ wallPatterns: [["..#.."]] });
+    expect(result.tuning.wallPatterns).toEqual(DEFAULT_TUNING.wallPatterns);
+    expect(result.issues).toEqual([
+      { path: "wallPatterns", kind: "invalid" },
+      { path: "wallPatterns.0", kind: "invalid" },
+    ]);
+  });
 });

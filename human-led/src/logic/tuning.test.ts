@@ -3,12 +3,13 @@ import { DEFAULT_TUNING, type Config, type ModuleSpec, type Tuning } from "../co
 import { nextStage, startRun, step } from "./game";
 import { buyModule, openShop } from "./shop";
 import { sameCell } from "./board";
-import { stageOf } from "./testing";
+import { stageOf, TEST_TUNING } from "./testing";
 import type { Game, ModuleId } from "./types";
 
 const tuned = (config: Partial<Config>, modules: Partial<Record<ModuleId, ModuleSpec>> = {}): Tuning => ({
-  config: { ...DEFAULT_TUNING.config, ...config },
+  config: { ...TEST_TUNING.config, ...config },
   modules: { ...DEFAULT_TUNING.modules, ...modules },
+  wallPatterns: DEFAULT_TUNING.wallPatterns,
 });
 
 const seeds = Array.from({ length: 30 }, (_, i) => i + 1);

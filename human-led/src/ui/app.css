@@ -463,6 +463,37 @@ body {
   resize: vertical;
 }
 
+.tuning-pattern {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tuning-pattern-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tuning button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tuning .tuning-pattern-input {
+  min-height: 0;
+  line-height: 1.1;
+  letter-spacing: 0.3em;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.tuning-error {
+  margin: 0;
+  color: #f43f5e;
+  font-size: 12px;
+}
+
 .tuning-messages {
   margin: 0;
   padding-left: 18px;

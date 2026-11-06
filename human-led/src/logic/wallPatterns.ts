@@ -1,22 +1,23 @@
 import { centerOf, insideBoard } from "./board";
-import type { Cell } from "./types";
+import type { Cell, WallPattern, WallPatternIssue } from "./types";
 
-const rect = (x0: number, y0: number, w: number, h: number): Cell[] =>
-  Array.from({ length: w * h }, (_, i) => ({ x: x0 + (i % w), y: y0 + Math.floor(i / w) }));
+/** 使えるパターンならnull、使えなければその理由を返す */
+export function checkWallPattern(pattern: WallPattern): WallPatternIssue | null {
+  if (pattern.length === 0 || pattern.every((row) => row.length === 0)) return "empty";
+  if (pattern.some((row) => /[^#.]/.test(row))) return "badChar";
+  if (pattern.some((row) => row.length !== pattern[0]!.length)) return "notRectangular";
+  const cx = Math.floor(pattern[0]!.length / 2);
+  const cy = Math.floor(pattern.length / 2);
+  const blocked = pattern.some((row, y) => [...row].some((ch, x) => ch === "#" && Math.abs(x - cx) <= 1 && Math.abs(y - cy) <= 1));
+  return blocked ? "blocksCenter" : null;
+}
 
-/** 仮のパターン。15×15の盤面で、どれも中央の5×5を空けておく */
-export const WALL_PATTERNS: readonly (readonly Cell[])[] = [
-  [...rect(2, 2, 3, 1), ...rect(2, 3, 1, 2), ...rect(10, 2, 3, 1), ...rect(12, 3, 1, 2), ...rect(2, 12, 3, 1), ...rect(2, 10, 1, 2), ...rect(10, 12, 3, 1), ...rect(12, 10, 1, 2)],
-  [...rect(3, 3, 2, 2), ...rect(10, 3, 2, 2), ...rect(3, 10, 2, 2), ...rect(10, 10, 2, 2)],
-  [...rect(4, 3, 7, 1), ...rect(4, 11, 7, 1)],
-];
-
-const PATTERN_CENTER = centerOf(15);
-
-/** 盤面の大きさが違っても中央の空きを保つように、パターンを盤面の中央に寄せる */
-export function placeWalls(pattern: readonly Cell[], boardSize: number): Cell[] {
+/** パターンの中央を盤面の中央に合わせて置き、盤面からはみ出した壁は捨てる */
+export function placeWallPattern(pattern: WallPattern, boardSize: number): Cell[] {
   const center = centerOf(boardSize);
+  const dx = center.x - Math.floor((pattern[0]?.length ?? 0) / 2);
+  const dy = center.y - Math.floor(pattern.length / 2);
   return pattern
-    .map((c) => ({ x: c.x - PATTERN_CENTER.x + center.x, y: c.y - PATTERN_CENTER.y + center.y }))
+    .flatMap((row, y) => [...row].flatMap((ch, x) => (ch === "#" ? [{ x: x + dx, y: y + dy }] : [])))
     .filter((c) => insideBoard(c, boardSize));
 }

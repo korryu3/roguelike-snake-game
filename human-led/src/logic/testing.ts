@@ -1,13 +1,16 @@
-import { CONFIG } from "../config";
+import { CONFIG, DEFAULT_TUNING, type Tuning } from "../config";
 import { startRun, step } from "./game";
 import type { Cell, Direction, Game, GameEvent, RunSetup } from "./types";
 
 export const CENTER: Cell = { x: 7, y: 7 };
 export const FAR_CORNER: Cell = { x: 0, y: 0 };
 
+/** テストの座標は15×15の盤面で書く。既定の盤面の大きさが変わっても座標を書き直さずに済むように */
+export const TEST_TUNING: Tuning = { ...DEFAULT_TUNING, config: { ...CONFIG, boardSize: 15 } };
+
 /** 壁なしの盤面で、指定した方向に進み出したところ */
 export function begin(direction: Direction, setup: RunSetup = {}, seed = 1): Game {
-  const game = startRun(seed, { walls: [], battery: FAR_CORNER, ...setup });
+  const game = startRun(seed, { walls: [], battery: FAR_CORNER, tuning: TEST_TUNING, ...setup });
   return step(game, [direction], 0).game;
 }
 
