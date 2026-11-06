@@ -9,15 +9,18 @@ type Props = {
   readonly draft: Tuning;
   readonly running: Tuning;
   readonly saved: boolean;
+  readonly paused: boolean;
   readonly onChange: (tuning: Tuning) => void;
-  readonly onRestart: (tuning: Tuning) => void;
+  /** ブラウザに保存し、その数値で新しいランを始める */
+  readonly onSave: (tuning: Tuning) => void;
+  readonly onTogglePause: () => void;
 };
 
 const GROUPS = [...new Set(CONFIG_KEYS.map((key) => CONFIG_FIELDS[key].group))];
 
 const toJson = (tuning: Tuning) => JSON.stringify(tuning, null, 2);
 
-export function TuningPanel({ draft, running, saved, onChange, onRestart }: Props) {
+export function TuningPanel({ draft, running, saved, paused, onChange, onSave, onTogglePause }: Props) {
   // 既定値に戻す・読み込むで値が外から変わったら、入力途中の文字列ごと作り直す
   const [revision, setRevision] = useState(0);
   const [jsonText, setJsonText] = useState("");
@@ -58,18 +61,21 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
     <aside className="tuning" aria-label="調整パネル">
       <header className="tuning-header">
         <h2>数値の調整</h2>
-        <span className="tuning-hint">Tで閉じる。開いているあいだは止まる</span>
+        <span className="tuning-hint">Tで開閉。開くと止まる</span>
       </header>
       <div className="tuning-actions">
-        <button type="button" className="tuning-primary" onClick={() => onRestart(draft)}>
-          この数値で始め直す
+        <button type="button" className="tuning-primary" onClick={() => onSave(draft)}>
+          設定を保存（反映して始め直す）
+        </button>
+        <button type="button" onClick={onTogglePause}>
+          {paused ? "再開" : "停止"}
         </button>
         <button type="button" onClick={() => replace(DEFAULT_TUNING, ["既定値に戻した"])}>
           既定値に戻す
         </button>
       </div>
       <p className={`tuning-note${hasPendingChanges ? "" : " tuning-note-placeholder"}`} aria-hidden={!hasPendingChanges}>
-        今のランにはまだ反映していない
+        まだ保存していない
       </p>
       {!saved && <p className="tuning-note">この環境では保存できない。閉じると消える</p>}
 

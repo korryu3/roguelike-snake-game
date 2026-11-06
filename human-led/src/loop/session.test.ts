@@ -55,30 +55,68 @@ describe("createSession", () => {
     });
   });
 
-  describe("調整パネル", () => {
-    test("パネルを開くと、閉じるまで時間が進まず、方向の入力も受け付けない", () => {
-      const session = createSession(seeds(1));
+  describe("調整パネルと停止", () => {
+    const started = () => {
+      const session = createSession(seeds(1, 2));
       session.command({ kind: "direction", direction: "up" });
       session.advance(0);
+      return session;
+    };
+    const remainingMs = (game: Game) => {
+      if (game.phase !== "playing") throw new Error(`ステージ中のはず: ${game.phase}`);
+      return game.stage.remainingMs;
+    };
+
+    test("Tでパネルを開くと止まり、Tで閉じると再開する", () => {
+      const session = started();
       const playing = session.store.getSnapshot();
       session.command({ kind: "togglePanel" });
-      expect(session.panelOpen.getSnapshot()).toBe(true);
+      expect([session.panelOpen.getSnapshot(), session.paused.getSnapshot()]).toEqual([true, true]);
       session.command({ kind: "direction", direction: "left" });
       session.advance(1_000);
       expect(session.store.getSnapshot()).toBe(playing);
       session.command({ kind: "togglePanel" });
-      expect(session.panelOpen.getSnapshot()).toBe(false);
-      session.advance(0);
-      const game = session.store.getSnapshot();
-      if (game.phase !== "playing") throw new Error(game.phase);
-      expect(game.movement.queuedInputs).toEqual([]);
+      expect([session.panelOpen.getSnapshot(), session.paused.getSnapshot()]).toEqual([false, false]);
+      session.advance(100);
+      expect(remainingMs(session.store.getSnapshot())).toBe(remainingMs(playing) - 100);
     });
 
-    test("パネルを開いたまま始め直しても閉じない", () => {
-      const session = createSession(seeds(1, 2));
+    test("パネルを開いたまま再開ボタンを押すと、時間が進み、方向の入力も受け付ける", () => {
+      const session = started();
+      session.command({ kind: "togglePanel" });
+      session.togglePause();
+      session.command({ kind: "direction", direction: "left" });
+      session.advance(100);
+      const game = session.store.getSnapshot();
+      expect(session.panelOpen.getSnapshot()).toBe(true);
+      expect(remainingMs(game)).toBe(CONFIG.timeLimitMs - 100);
+      if (game.phase !== "playing") throw new Error(game.phase);
+      expect(game.movement.queuedInputs).toEqual(["left"]);
+    });
+
+    test("再開中にもう一度押すと止まる", () => {
+      const session = started();
+      session.togglePause();
+      const before = session.store.getSnapshot();
+      session.advance(1_000);
+      expect(session.paused.getSnapshot()).toBe(true);
+      expect(session.store.getSnapshot()).toBe(before);
+    });
+
+    test("再開ボタンで止めたあと、Tでパネルを閉じても再開する", () => {
+      const session = started();
+      session.command({ kind: "togglePanel" });
+      session.togglePause();
+      session.togglePause();
+      session.command({ kind: "togglePanel" });
+      expect(session.paused.getSnapshot()).toBe(false);
+    });
+
+    test("パネルを開いたまま始め直すと、パネルは開いたままで、止まっていない", () => {
+      const session = started();
       session.command({ kind: "togglePanel" });
       session.restart(DEFAULT_TUNING);
-      expect(session.panelOpen.getSnapshot()).toBe(true);
+      expect([session.panelOpen.getSnapshot(), session.paused.getSnapshot()]).toEqual([true, false]);
     });
   });
 

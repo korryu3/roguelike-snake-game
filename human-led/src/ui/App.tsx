@@ -17,6 +17,7 @@ type Props = { session: Session; tuningStorage: TuningStorage; langStorage: Lang
 export function App({ session, tuningStorage, langStorage }: Props) {
   const game = useSyncExternalStore(session.store.subscribe, session.store.getSnapshot);
   const panelOpen = useSyncExternalStore(session.panelOpen.subscribe, session.panelOpen.getSnapshot);
+  const paused = useSyncExternalStore(session.paused.subscribe, session.paused.getSnapshot);
   const [onTitle, setOnTitle] = useState(true);
   const [lang, setLang] = useState<Lang>(() => langStorage.load());
   const [draft, setDraft] = useState<Tuning>(() => game.run.tuning);
@@ -32,9 +33,9 @@ export function App({ session, tuningStorage, langStorage }: Props) {
     setLang(next);
     langStorage.save(next);
   };
-  const changeDraft = (tuning: Tuning) => {
-    setDraft(tuning);
+  const saveAndApply = (tuning: Tuning) => {
     setSaved(tuningStorage.save(tuning));
+    session.restart(tuning);
   };
   const newRun = () => {
     session.restart(game.run.tuning);
@@ -52,7 +53,15 @@ export function App({ session, tuningStorage, langStorage }: Props) {
       )}
       <p className="controls">{t.controls}</p>
       {panelOpen && (
-        <TuningPanel draft={draft} running={game.run.tuning} saved={saved} onChange={changeDraft} onRestart={session.restart} />
+        <TuningPanel
+          draft={draft}
+          running={game.run.tuning}
+          saved={saved}
+          paused={paused}
+          onChange={setDraft}
+          onSave={saveAndApply}
+          onTogglePause={session.togglePause}
+        />
       )}
     </main>
   );

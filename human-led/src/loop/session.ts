@@ -18,8 +18,11 @@ export type ScreenAction =
 
 export type Session = {
   readonly store: ReadonlyStore<Game>;
-  /** 調整パネルを開いているあいだは、ゲームを止める */
   readonly panelOpen: ReadonlyStore<boolean>;
+  /** 止まっているあいだは、時間が進まず、方向の入力も受け付けない */
+  readonly paused: ReadonlyStore<boolean>;
+  /** 調整パネルの停止 / 再開ボタン */
+  readonly togglePause: () => void;
   readonly command: (command: KeyCommand) => void;
   readonly advance: (elapsedMs: number) => void;
   /** その局面でできない操作は何も変えない */
@@ -53,17 +56,24 @@ export function createSession(
   const newRun = (tuning: Tuning) => newGame(newSeed(), tuning);
   const store = createStore(newRun(initialTuning));
   const panelOpen = createStore(false);
+  const paused = createStore(false);
   let pressed: Direction[] = [];
   return {
     store,
     panelOpen,
+    paused,
+    togglePause: () => paused.set(!paused.getSnapshot()),
     command: (command) => {
-      if (command.kind === "togglePanel") return panelOpen.set(!panelOpen.getSnapshot());
-      if (panelOpen.getSnapshot()) return;
+      if (command.kind === "togglePanel") {
+        const open = !panelOpen.getSnapshot();
+        panelOpen.set(open);
+        return paused.set(open);
+      }
+      if (paused.getSnapshot()) return;
       pressed.push(command.direction);
     },
     advance: (elapsedMs) => {
-      if (panelOpen.getSnapshot()) return;
+      if (paused.getSnapshot()) return;
       const input = pressed;
       pressed = [];
       store.set(step(store.getSnapshot(), input, elapsedMs).game);
@@ -73,6 +83,7 @@ export function createSession(
     },
     restart: (tuning) => {
       store.set(newRun(tuning));
+      paused.set(false);
     },
   };
 }
