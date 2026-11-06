@@ -79,12 +79,8 @@ export type Game =
       readonly stage: StageState;
       readonly movement: Movement;
     }
-  | {
-      readonly phase: "reviveChoice";
-      readonly run: RunState;
-      readonly stage: StageState;
-      readonly movement: Movement;
-    }
+  /** 生き返ったら中央から出直すので、動きの状態は持たない */
+  | { readonly phase: "reviveChoice"; readonly run: RunState; readonly stage: StageState }
   | { readonly phase: "cleared"; readonly run: RunState; readonly stage: StageState; readonly summary: ClearSummary }
   | { readonly phase: "shop"; readonly run: RunState; readonly offers: readonly Offer[] }
   | { readonly phase: "gameOver"; readonly run: RunState; readonly cause: DeathCause };

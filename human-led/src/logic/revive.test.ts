@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { CONFIG } from "../config";
 import { giveUp, revive, step } from "./game";
-import { begin, stageOf, tick } from "./testing";
+import { begin, CENTER, stageOf, tick, ticks } from "./testing";
 import type { Game, ModuleId } from "./types";
 
-/** HP1で壁にぶつかり、生き返るモーダルになったところ */
+/** 中央から右へ2マス進み、HP1で壁にぶつかって、生き返るモーダルになったところ */
 const dying = (modules: readonly ModuleId[]) => {
-  const game = tick(begin("right", { walls: [{ x: 8, y: 7 }], hp: 1, modules })).game;
+  const setup = { walls: [{ x: 10, y: 7 }], hp: 1, modules, goal: { x: 2, y: 2 }, hearts: [{ x: 3, y: 3 }] };
+  const game = ticks(begin("right", setup), 3).game;
   if (game.phase !== "reviveChoice") throw new Error(`生き返るモーダルではない: ${game.phase}`);
   return game;
 };
@@ -17,15 +18,38 @@ const movementOf = (game: Game) => {
 };
 
 describe("revive", () => {
-  it("1回生き返るで生き返ると、HP満タンで、その場から無敵時間付きで再開し、モジュールを1つ消費する", () => {
+  it("1回生き返るで生き返ると、HP満タンになり、モジュールを1つ消費する", () => {
     const before = dying(["revive", "revive", "reviveAtOneHp"]);
     const { game, events } = revive(before, "revive");
-    expect(game.phase).toBe("playing");
     expect(game.run.hp).toBe(CONFIG.initialHp);
     expect(game.run.modules).toEqual(["revive", "reviveAtOneHp"]);
-    expect(stageOf(game).body).toEqual(before.stage.body);
-    expect(movementOf(game).invincibleMs).toBe(CONFIG.invincibleMs);
     expect(events).toEqual([{ type: "revived" }]);
+  });
+
+  it("生き返ると、ステージ開始待ちになり、中央のマスに頭だけが置かれる", () => {
+    const { game } = revive(dying(["revive"]), "revive");
+    expect(game.phase).toBe("awaitingStart");
+    expect(stageOf(game).body).toEqual([CENTER]);
+  });
+
+  it("生き返っても、長さ・壁・バッテリー・ゴール・ハート・残り時間は変わらない", () => {
+    const before = dying(["revive"]);
+    const { game } = revive(before, "revive");
+    expect(game.run.length).toBe(before.run.length);
+    const { body: _before, ...rest } = before.stage;
+    expect(stageOf(game)).toMatchObject(rest);
+  });
+
+  it("生き返ったあと、方向キーを押すまで残り時間は減らない", () => {
+    const revived = revive(dying(["revive"]), "revive").game;
+    const { game } = step(revived, [], 10_000);
+    expect(stageOf(game).remainingMs).toBe(stageOf(revived).remainingMs);
+  });
+
+  it("生き返ったあと動き出しても、無敵時間はない", () => {
+    const revived = revive(dying(["revive"]), "revive").game;
+    const { game } = step(revived, ["up"], 0);
+    expect(movementOf(game).invincibleMs).toBe(0);
   });
 
   it("満タンは、HPの上限+1で増えた上限まで", () => {
@@ -35,7 +59,6 @@ describe("revive", () => {
 
   it("1回生き返る（デメリット付き）で生き返ると、HP1", () => {
     const { game } = revive(dying(["reviveAtOneHp"]), "reviveAtOneHp");
-    expect(game.phase).toBe("playing");
     expect(game.run.hp).toBe(1);
     expect(game.run.modules).toEqual([]);
   });

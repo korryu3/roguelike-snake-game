@@ -95,8 +95,16 @@ function drawHearts(ctx: Ctx, hearts: readonly Cell[]): void {
   }
 }
 
+/** 点滅のうち、スネークを消しているあいだはfalse */
+export function snakeVisible(movement: Movement | null): boolean {
+  if (!movement) return true;
+  const { motion, invincibleMs } = movement;
+  const blinkingMs = motion.kind === "stunned" ? motion.remainingMs : invincibleMs;
+  return Math.floor(blinkingMs / BLINK_INTERVAL_MS) % 2 === 0;
+}
+
 function drawSnake(ctx: Ctx, body: StageState["body"], movement: Movement | null): void {
-  if (movement && Math.floor(movement.invincibleMs / BLINK_INTERVAL_MS) % 2 === 1) return;
+  if (!snakeVisible(movement)) return;
   const stunned = movement?.motion.kind === "stunned";
   body.forEach((cell, i) => {
     const { x, y } = px(cell);
