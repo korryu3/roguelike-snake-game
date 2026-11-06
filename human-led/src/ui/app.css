@@ -1,6 +1,7 @@
 :root {
   color-scheme: dark;
-  font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif;
+  /* ネットにつながっていないときは、ふつうのフォントで表示する */
+  font-family: "WDXL Lubrifont JP N", system-ui, -apple-system, "Hiragino Sans", sans-serif;
   background: #070d18;
   color: #e2e8f0;
 }
@@ -337,7 +338,9 @@ body {
   color: #94a3b8;
 }
 
+/* 調整パネルは開発用の道具なので、ゲームのフォントにしない */
 .tuning {
+  font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif;
   position: fixed;
   top: 0;
   right: 0;
