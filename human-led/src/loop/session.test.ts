@@ -117,7 +117,7 @@ describe("createSession", () => {
     test("生き返るモーダルで、選んだモジュールで生き返る", () => {
       const session = sessionAt(dying(["revive", "reviveAtOneHp"]));
       session.perform({ kind: "revive", module: "reviveAtOneHp" });
-      expect(session.store.getSnapshot()).toMatchObject({ phase: "playing", run: { hp: 1, modules: ["revive"] } });
+      expect(session.store.getSnapshot()).toMatchObject({ phase: "awaitingStart", run: { hp: 1, modules: ["revive"] } });
     });
 
     test("生き返るモーダルで諦めると、ゲームオーバー", () => {

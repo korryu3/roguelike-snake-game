@@ -21,10 +21,10 @@ describe("step: クリア", () => {
   });
 
   it("時間ボーナスは、ゴールに入った時点の残り秒数（端数切り捨て）×係数", () => {
-    const elapsed = CONFIG.timeLimitMs - 60_500;
+    const elapsed = CONFIG.timeLimitMs - 30_500;
     const { game } = step(begin("right", { goal: AHEAD, batteriesEaten: CONFIG.batteriesToGoal }), [], elapsed);
-    expect(summaryOf(game).timeBonus).toBe(60 * CONFIG.timeBonusPerSecond);
-    expect(game.run.score).toBe(CONFIG.batteriesToGoal * CONFIG.scorePerBattery + 60 * CONFIG.timeBonusPerSecond);
+    expect(summaryOf(game).timeBonus).toBe(30 * CONFIG.timeBonusPerSecond);
+    expect(game.run.score).toBe(CONFIG.batteriesToGoal * CONFIG.scorePerBattery + 30 * CONFIG.timeBonusPerSecond);
   });
 
   it("クリアの内訳に、ステージ番号、獲得PP、バッテリーの分、時間ボーナスの分、かかった時間が入る", () => {

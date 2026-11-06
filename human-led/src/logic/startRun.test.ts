@@ -20,6 +20,10 @@ describe("startRun", () => {
     expect(game.stage.body).toEqual([CENTER]);
   });
 
+  it("既定の制限時間は60秒", () => {
+    expect(CONFIG.timeLimitMs).toBe(60_000);
+  });
+
   it("残り時間は制限時間いっぱい、食べた数は0、ゴールはない", () => {
     const game = startRun(1);
     if (game.phase !== "awaitingStart") throw new Error(game.phase);

@@ -59,11 +59,11 @@ export function revive(game: Game, module: ModuleId): StepResult {
   const reviveHp = REVIVE_HP[module];
   if (reviveHp === undefined || modules === null) return { game, events: [] };
   return {
+    // ステージ開始時と同じく、中央のマスに頭だけを置いて方向キーを待つ
     game: {
-      phase: "playing",
+      phase: "awaitingStart",
       run: { ...game.run, hp: reviveHp(effectsOf(game.run.modules, game.run.tuning.config).maxHp), modules },
-      stage: game.stage,
-      movement: { ...game.movement, motion: { kind: "moving", sinceLastMoveMs: 0 }, invincibleMs: game.run.tuning.config.invincibleMs },
+      stage: { ...game.stage, body: [centerOf(game.run.tuning.config.boardSize)] },
     },
     events: [{ type: "revived" }],
   };
@@ -132,8 +132,15 @@ function advance(game: Playing, elapsedMs: number): StepResult {
 }
 
 function randomEscape(game: Playing): [Direction, RngState] {
-  const safe = DIRECTIONS.filter((d) => obstacleAt(game, neighbor(game.stage.body[0], d)) === null);
-  return pick(game.run.rng, safe.length > 0 ? safe : DIRECTIONS);
+  const back = OPPOSITE[game.movement.direction];
+  const toward = (d: Direction) => obstacleAt(game, neighbor(game.stage.body[0], d));
+  // 空いている方向 → 体（真後ろ以外。すり抜けられる） → 真後ろの体 → どこでも、の順に選ぶ
+  const tiers = [
+    DIRECTIONS.filter((d) => toward(d) === null),
+    DIRECTIONS.filter((d) => toward(d) === "body" && d !== back),
+    DIRECTIONS.filter((d) => toward(d) === "body" && d === back),
+  ];
+  return pick(game.run.rng, tiers.find((tier) => tier.length > 0) ?? DIRECTIONS);
 }
 
 function recover(game: Playing, remainingMs: number): Playing {
@@ -150,12 +157,10 @@ function recover(game: Playing, remainingMs: number): Playing {
 function moveOneCell(game: Playing): StepResult {
   const [next, ...rest] = game.movement.queuedInputs;
   const turned: Playing = { ...game, movement: { ...game.movement, direction: next ?? game.movement.direction, queuedInputs: rest } };
-  const { body: current } = game.stage;
-  const head = neighbor(current[0], turned.movement.direction);
+  const head = neighbor(game.stage.body[0], turned.movement.direction);
   const obstacle = obstacleAt(game, head);
   if (obstacle) return collide(turned, obstacle);
-  const body: StageState["body"] = [head, ...current.slice(0, game.run.length - 1)];
-  const moved: Playing = { ...turned, stage: { ...game.stage, body } };
+  const moved = enter(turned);
   if (game.stage.goal && sameCell(head, game.stage.goal)) return clearStage(moved);
   if (sameCell(head, game.stage.battery)) return eatBattery(moved);
   if (game.stage.hearts.some((h) => sameCell(h, head))) return collectHeart(moved, head);
@@ -245,6 +250,8 @@ function obstacleAt({ stage, run }: Playing, cell: Cell): Obstacle | null {
 
 
 function collide(game: Playing, obstacle: Obstacle): StepResult {
+  // 体はすり抜けられる。無敵時間中ならダメージもない
+  if (game.movement.invincibleMs > 0 && obstacle === "body") return { game: enter(game), events: [] };
   if (game.movement.invincibleMs > 0) {
     const [direction, rng] = randomEscape(game);
     return {
@@ -265,12 +272,24 @@ function collide(game: Playing, obstacle: Obstacle): StepResult {
   if (run.hp <= 0) {
     const events: GameEvent[] = [collided, { type: "hpDepleted" }];
     if (run.modules.some((m) => REVIVE_HP[m])) {
-      return { game: { phase: "reviveChoice", run, stage: game.stage, movement: game.movement }, events };
+      return { game: { phase: "reviveChoice", run, stage: game.stage }, events };
     }
     return { game: { phase: "gameOver", run, cause: "hp" }, events };
+  }
+  if (obstacle === "body") {
+    const entered = enter(game);
+    const movement = { ...entered.movement, invincibleMs: run.tuning.config.invincibleMs };
+    return { game: { ...entered, run, movement }, events: [collided] };
   }
   return {
     game: { ...game, run, movement: { ...game.movement, motion: stunned } },
     events: [collided],
   };
+}
+
+/** 頭を向きの先のマスへ進める */
+function enter(game: Playing): Playing {
+  const { body: current } = game.stage;
+  const body: StageState["body"] = [neighbor(current[0], game.movement.direction), ...current.slice(0, game.run.length - 1)];
+  return { ...game, stage: { ...game.stage, body } };
 }

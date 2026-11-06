@@ -3,7 +3,7 @@ import type { ModuleId } from "./logic/types";
 export const CONFIG = {
   boardSize: 15,
   moveIntervalMs: 150,
-  timeLimitMs: 120_000,
+  timeLimitMs: 60_000,
   batteriesToGoal: 8,
   initialHp: 3,
   initialLength: 3,
