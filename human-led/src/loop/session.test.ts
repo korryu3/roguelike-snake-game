@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { CONFIG, DEFAULT_TUNING, type Tuning } from "../config";
 import { startRun } from "../logic/game";
 import { openShop } from "../logic/shop";
-import { begin, cleared, tick } from "../logic/testing";
+import { begin, cleared, TEST_TUNING, tick } from "../logic/testing";
 import type { Game, ModuleId } from "../logic/types";
 import { createSession } from "./session";
 
@@ -18,14 +18,14 @@ describe("createSession", () => {
   });
 
   test("方向を押して時間を進めると、ステージが始まる", () => {
-    const session = createSession(seeds(1));
+    const session = createSession(seeds(1), TEST_TUNING);
     session.command({ kind: "direction", direction: "up" });
     session.advance(0);
     expect(session.store.getSnapshot()).toMatchObject({ phase: "playing", movement: { direction: "up" } });
   });
 
   test("押した方向は1回の進行でだけ使われる", () => {
-    const session = createSession(seeds(1));
+    const session = createSession(seeds(1), TEST_TUNING);
     session.command({ kind: "direction", direction: "up" });
     session.advance(0);
     session.command({ kind: "direction", direction: "left" });

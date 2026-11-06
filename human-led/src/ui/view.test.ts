@@ -3,13 +3,13 @@ import { DEFAULT_TUNING, type Tuning } from "../config";
 import { MESSAGES } from "../i18n/messages";
 import { startRun } from "../logic/game";
 import { openShop } from "../logic/shop";
-import { cleared } from "../logic/testing";
+import { cleared, TEST_TUNING } from "../logic/testing";
 import type { Game, ModuleId, Offer } from "../logic/types";
 import { describeModules, describeOffers, reviveOptions } from "./view";
 
 const { en } = MESSAGES;
 
-function shop(pp: number, offers: readonly Offer[], tuning: Tuning = DEFAULT_TUNING): Extract<Game, { phase: "shop" }> {
+function shop(pp: number, offers: readonly Offer[], tuning: Tuning = TEST_TUNING): Extract<Game, { phase: "shop" }> {
   const game = openShop(cleared({ pp, tuning })).game;
   if (game.phase !== "shop") throw new Error(game.phase);
   return { ...game, run: { ...game.run, pp }, offers };
@@ -23,7 +23,7 @@ describe("describeOffers", () => {
   ];
 
   test("候補ごとに、名前、説明、値段、購入済みかどうかを、候補の並びの順で返す", () => {
-    const tuning: Tuning = { ...DEFAULT_TUNING, config: { ...DEFAULT_TUNING.config, timeLimitPlusMs: 7_000 } };
+    const tuning: Tuning = { ...TEST_TUNING, config: { ...TEST_TUNING.config, timeLimitPlusMs: 7_000 } };
     expect(describeOffers(shop(0, offers, tuning), en)).toMatchObject([
       { offerIndex: 0, module: "revive", name: "Revive (Full)", price: 12, sold: false },
       { offerIndex: 1, module: "maxHpPlus1", name: "Max HP +1", price: 7, sold: true },
@@ -40,7 +40,7 @@ describe("describeOffers", () => {
   });
 
   test("値段は調整した数値から引く", () => {
-    const tuning: Tuning = { ...DEFAULT_TUNING, modules: { ...DEFAULT_TUNING.modules, revive: { price: 3, maxStack: 2 } } };
+    const tuning: Tuning = { ...TEST_TUNING, modules: { ...DEFAULT_TUNING.modules, revive: { price: 3, maxStack: 2 } } };
     expect(describeOffers(shop(3, offers, tuning), en)[0]).toMatchObject({ price: 3, affordable: true });
   });
 });

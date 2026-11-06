@@ -2,7 +2,7 @@ import { DEFAULT_TUNING } from "../config";
 import { centerOf, DIRECTIONS, hasFreeCell, insideBoard, neighbor, OPPOSITE, sameCell, spawnOnFreeCell } from "./board";
 import { consumeAtStageStart, consumeOne, type Effects, effectsOf, REVIVE_HP } from "./modules";
 import { nextFloat, pick } from "./rng";
-import { placeWalls, WALL_PATTERNS } from "./wallPatterns";
+import { placeWallPattern } from "./wallPatterns";
 import type { BatteryKind, Cell, ClearSummary, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, RunState, StageState, StepResult } from "./types";
 
 export function startRun(seed: number, setup: RunSetup = {}): Game {
@@ -29,8 +29,8 @@ export function nextStage(game: Game): StepResult {
 
 function enterStage(run: RunState, setup: RunSetup = {}): Game {
   const { config } = run.tuning;
-  const [pattern, rngAfterWalls] = pick(run.rng, WALL_PATTERNS);
-  const walls = setup.walls ?? placeWalls(pattern, config.boardSize);
+  const [pattern, rngAfterWalls] = pick(run.rng, run.tuning.wallPatterns);
+  const walls = setup.walls ?? placeWallPattern(pattern, config.boardSize);
   const body: StageState["body"] = [centerOf(config.boardSize)];
   const effects = effectsOf(run.modules, config);
   const [spawned, spawnedKind, rng] = spawnBattery(rngAfterWalls, [...walls, ...body], effects, config.boardSize);

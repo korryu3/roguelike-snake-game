@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CONFIG } from "../config";
+import { CONFIG, DEFAULT_TUNING } from "../config";
 import { nextStage } from "./game";
 import { openShop } from "./shop";
-import { begin, CENTER, cleared, stageOf, ticks } from "./testing";
-import { WALL_PATTERNS } from "./wallPatterns";
+import { begin, CENTER, cleared, stageOf, TEST_TUNING, ticks } from "./testing";
+import { placeWallPattern } from "./wallPatterns";
 import type { Game, RunSetup } from "./types";
 
 /** バッテリーを1個食べてからゴールに入り、モジュールの画面を経て次のステージへ進む */
@@ -41,7 +41,7 @@ describe("nextStage", () => {
       timeLimitMs: CONFIG.timeLimitMs,
       remainingMs: CONFIG.timeLimitMs,
     });
-    expect(WALL_PATTERNS).toContainEqual(stage.walls);
+    expect(DEFAULT_TUNING.wallPatterns.map((p) => placeWallPattern(p, TEST_TUNING.config.boardSize))).toContainEqual(stage.walls);
   });
 
   it("制限時間+5秒を持っていると、持っている数だけ制限時間が延び、モジュールは残る", () => {

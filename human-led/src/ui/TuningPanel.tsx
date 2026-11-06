@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
 import { DEFAULT_TUNING, MODULE_IDS, type Config, type ModuleSpec, type Tuning } from "../config";
-import type { ModuleId } from "../logic/types";
+import type { ModuleId, WallPattern, WallPatternIssue } from "../logic/types";
+import { checkWallPattern } from "../logic/wallPatterns";
 import { MESSAGES } from "../i18n/messages";
 import { CONFIG_FIELDS, CONFIG_KEYS, FIELD_BY_PATH, MODULE_SPEC_FIELDS, type Rule, SPEC_KEYS } from "../tuning/fields";
 import { parseTuningJson, satisfies, type TuningIssue } from "../tuning/parse";
+import { patternFromText, patternToText } from "../tuning/patternText";
 
 type Props = {
   readonly draft: Tuning;
@@ -33,6 +35,14 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
   const setConfig = (key: keyof Config, value: number) => onChange({ ...draft, config: { ...draft.config, [key]: value } });
   const setSpec = (id: ModuleId, key: keyof ModuleSpec, value: number) =>
     onChange({ ...draft, modules: { ...draft.modules, [id]: { ...draft.modules[id], [key]: value } } });
+  const setPattern = (index: number, pattern: WallPattern) =>
+    onChange({ ...draft, wallPatterns: draft.wallPatterns.map((p, i) => (i === index ? pattern : p)) });
+  // 追加と削除では並びが変わるので、入力途中の文字列ごと作り直す
+  const addPattern = () => {
+    const size = draft.config.boardSize;
+    replace({ ...draft, wallPatterns: [...draft.wallPatterns, Array.from({ length: size }, () => ".".repeat(size))] }, []);
+  };
+  const removePattern = (index: number) => replace({ ...draft, wallPatterns: draft.wallPatterns.filter((_, i) => i !== index) }, []);
 
   const exportJson = async () => {
     const text = toJson(draft);
@@ -108,6 +118,26 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
             </div>
           ))}
         </fieldset>
+        <fieldset className="tuning-group">
+          <legend>壁のパターン</legend>
+          <p className="tuning-hint">#が壁、.が床。ステージごとに、この中からランダムに1つ選ぶ</p>
+          {draft.wallPatterns.map((pattern, i) => (
+            <div key={i} className="tuning-pattern">
+              <div className="tuning-pattern-head">
+                <span>パターン{i + 1}</span>
+                <button type="button" disabled={draft.wallPatterns.length <= 1} onClick={() => removePattern(i)}>
+                  削除
+                </button>
+              </div>
+              <PatternInput label={`パターン${i + 1}`} pattern={pattern} onCommit={(p) => setPattern(i, p)} />
+            </div>
+          ))}
+          <div className="tuning-actions">
+            <button type="button" onClick={addPattern}>
+              パターンを追加
+            </button>
+          </div>
+        </fieldset>
       </div>
 
       <fieldset className="tuning-group">
@@ -165,6 +195,36 @@ function NumberInput({ rule, value, onCommit, label }: { rule: Rule; value: numb
   );
 }
 
+const PATTERN_ISSUES: Readonly<Record<WallPatternIssue, string>> = {
+  empty: "パターンが空",
+  badChar: "#と.以外の文字がある",
+  notRectangular: "行の長さがそろっていない",
+  blocksCenter: "中央のマスかそのまわりに壁がある",
+};
+
+function PatternInput({ label, pattern, onCommit }: { label: string; pattern: WallPattern; onCommit: (pattern: WallPattern) => void }) {
+  const [text, setText] = useState(patternToText(pattern));
+  const issue = checkWallPattern(patternFromText(text));
+  return (
+    <>
+      <textarea
+        className={issue ? "tuning-json tuning-pattern-input tuning-invalid" : "tuning-json tuning-pattern-input"}
+        aria-label={label}
+        aria-invalid={issue !== null}
+        spellCheck={false}
+        rows={Math.max(pattern.length, 3)}
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+          const next = patternFromText(e.target.value);
+          if (checkWallPattern(next) === null) onCommit(next);
+        }}
+      />
+      {issue && <p className="tuning-error">{PATTERN_ISSUES[issue]}。直すまで反映しない</p>}
+    </>
+  );
+}
+
 function describeRule(rule: Rule): string {
   const range = rule.max === Number.MAX_SAFE_INTEGER ? `${rule.min}以上` : `${rule.min}〜${rule.max}`;
   return `${range}の${rule.integer ? "整数" : "数"}にする`;
@@ -172,6 +232,9 @@ function describeRule(rule: Rule): string {
 
 function describeIssue(issue: TuningIssue): string {
   if (issue.kind === "unknown") return `知らない項目なので無視した: ${issue.path}`;
+  if (issue.path === "wallPatterns") return "使える壁のパターンがないので既定のパターンにした";
+  const pattern = /^wallPatterns\.(\d+)$/.exec(issue.path);
+  if (pattern) return `${Number(pattern[1]) + 1}番目の壁のパターンは使えないので捨てた`;
   const field = FIELD_BY_PATH.get(issue.path);
   return field ? `${field.label}は使えない値なので既定値にした（${describeRule(field.rule)}）` : `${issue.path}は使えない値なので既定値にした`;
 }
