@@ -5,6 +5,10 @@ import { MESSAGES } from "./messages";
 const { ja, en } = MESSAGES;
 
 describe("MESSAGES", () => {
+  test("タイトルは、日本語がログスネ、英語がRLSG", () => {
+    expect([ja.title, en.title]).toEqual(["ログスネ", "RLSG"]);
+  });
+
   test("数を含む文言は、言語ごとの言い方で数を埋める", () => {
     expect([ja.hud.stage(3), ja.shop.price(12), ja.shop.reroll(2), ja.cleared.title(4)]).toEqual([
       "ステージ 3",
