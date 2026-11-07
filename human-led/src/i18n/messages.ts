@@ -19,6 +19,8 @@ export type Messages = {
     readonly close: string;
     readonly bgm: string;
     readonly sfx: string;
+    /** ステージ以外の画面に置くボタン。止めるものがないので⏸ではなく⚙にする */
+    readonly openOutsideStage: string;
   };
   readonly hud: {
     readonly stage: (stageNumber: number) => string;
@@ -81,7 +83,7 @@ const ja: Messages = {
   controls: "WASD / 矢印キーで操作",
   pressToStart: "方向キーで開始",
   pressToResume: "方向キーで再開",
-  settings: { open: "⏸ 設定", title: "設定", resume: "再開", close: "閉じる", bgm: "BGM", sfx: "効果音" },
+  settings: { open: "⏸ 設定", title: "設定", resume: "再開", close: "閉じる", bgm: "BGM", sfx: "効果音", openOutsideStage: "⚙ 設定" },
   hud: {
     stage: (n) => `ステージ ${n}`,
     pp: (pp) => `PP ${pp}`,
@@ -148,7 +150,7 @@ const en: Messages = {
   controls: "Move with WASD / Arrow keys",
   pressToStart: "Press a direction key to start",
   pressToResume: "Press a direction key to resume",
-  settings: { open: "⏸ Settings", title: "Settings", resume: "Resume", close: "Close", bgm: "Music", sfx: "Sound effects" },
+  settings: { open: "⏸ Settings", title: "Settings", resume: "Resume", close: "Close", bgm: "Music", sfx: "Sound effects", openOutsideStage: "⚙ Settings" },
   hud: {
     stage: (n) => `Stage ${n}`,
     pp: (pp) => `PP ${pp}`,

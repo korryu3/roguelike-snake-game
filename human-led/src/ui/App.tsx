@@ -73,24 +73,28 @@ export function App({ session, tuningStorage, langStorage, audio, volumeStorage 
 
   return (
     <main className="app" onClick={playButtonSound}>
-      {/* 盤面と同じ幅の列の右上。ステージ中は時間制限の真上に来る */}
-      <div className="top-bar" style={{ width: boardPx(game.run.tuning.config.boardSize) }}>
-        <button type="button" className="button settings-open" onClick={toggleMenu}>
-          {t.settings.open}
-        </button>
-      </div>
       {onTitle ? (
-        <TitleScreen t={t} lang={lang} onLangChange={changeLang} onStart={newRun} />
+        <TitleScreen t={t} onStart={newRun} onOpenSettings={toggleMenu} />
       ) : game.phase === "gameOver" ? (
-        <GameOverScreen game={game} t={t} onRetry={newRun} onTitle={() => setOnTitle(true)} />
+        <GameOverScreen game={game} t={t} onRetry={newRun} onTitle={() => setOnTitle(true)} onOpenSettings={toggleMenu} />
       ) : (
-        <StageView game={game} t={t} session={session} />
+        <>
+          {/* ステージ中は、盤面と同じ幅の列の右上、時間制限の真上に置く */}
+          <div className="top-bar" style={{ width: boardPx(game.run.tuning.config.boardSize) }}>
+            <button type="button" className="button settings-open" onClick={toggleMenu}>
+              {t.settings.open}
+            </button>
+          </div>
+          <StageView game={game} t={t} session={session} />
+        </>
       )}
       <p className="controls">{t.controls}</p>
       {menuOpen && (
         <SettingsMenu
           t={t}
           volumes={volumes}
+          lang={lang}
+          onLangChange={changeLang}
           inStage={!onTitle && (game.phase === "paused" || game.phase === "awaitingStart")}
           onVolumesChange={changeVolumes}
           onSfxPreview={() => audio.play("pickup")}
