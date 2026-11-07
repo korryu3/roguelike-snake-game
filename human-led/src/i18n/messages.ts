@@ -83,7 +83,15 @@ const ja: Messages = {
   controls: "WASD / 矢印キーで操作",
   pressToStart: "方向キーで開始",
   pressToResume: "方向キーで再開",
-  settings: { open: "⏸ 設定", title: "設定", resume: "再開", close: "閉じる", bgm: "BGM", sfx: "効果音", openOutsideStage: "⚙ 設定" },
+  settings: {
+    open: "⏸ 設定",
+    title: "設定",
+    resume: "再開",
+    close: "閉じる",
+    bgm: "BGM",
+    sfx: "効果音",
+    openOutsideStage: "⚙ 設定",
+  },
   hud: {
     stage: (n) => `ステージ ${n}`,
     pp: (pp) => `PP ${pp}`,
@@ -135,11 +143,23 @@ const ja: Messages = {
     doublePpAndGrowth: { name: "PP・伸び2倍", description: () => "バッテリーから取得できるPPと体の伸びが2倍になる" },
     revive: { name: "1回復活（完全回復）", description: () => "HPが0になったらHP満タンで復活（使い切り）" },
     reviveAtOneHp: { name: "1回復活（一部回復）", description: () => "HPが0になったらHP1で復活（使い切り）" },
-    timeLimitPlus5s: { name: "制限時間延長（永続）", description: (c) => `制限時間が${seconds(c.timeLimitPlusMs)}秒延びる（永続）` },
-    timeLimitBoostNextStage: { name: "制限時間延長（次のステージ）", description: (c) => `次のステージだけ、制限時間が${seconds(c.timeLimitBoostMs)}秒延びる` },
-    wallDamageImmunity: { name: "壁ダメージ無効", description: () => "1度だけ壁にぶつかってもHPが減らない（体は対象外・使い切り）" },
+    timeLimitPlus5s: {
+      name: "制限時間延長（永続）",
+      description: (c) => `制限時間が${seconds(c.timeLimitPlusMs)}秒延びる（永続）`,
+    },
+    timeLimitBoostNextStage: {
+      name: "制限時間延長（次のステージ）",
+      description: (c) => `次のステージだけ、制限時間が${seconds(c.timeLimitBoostMs)}秒延びる`,
+    },
+    wallDamageImmunity: {
+      name: "壁ダメージ無効",
+      description: () => "1度だけ壁にぶつかってもHPが減らない（体は対象外・使い切り）",
+    },
     maxHpPlus1: { name: "HPの上限＋1", description: () => "HPの上限が1増える" },
-    doublePpBattery: { name: "PP2倍のバッテリー", description: (c) => `${percent(c.doublePpBatteryChancePerStack)}の確率で、PPが2倍のバッテリーが出現` },
+    doublePpBattery: {
+      name: "PP2倍のバッテリー",
+      description: (c) => `${percent(c.doublePpBatteryChancePerStack)}の確率で、PPが2倍のバッテリーが出現`,
+    },
   },
 };
 
@@ -150,7 +170,15 @@ const en: Messages = {
   controls: "Move with WASD / Arrow keys",
   pressToStart: "Press a direction key to start",
   pressToResume: "Press a direction key to resume",
-  settings: { open: "⏸ Settings", title: "Settings", resume: "Resume", close: "Close", bgm: "Music", sfx: "Sound effects", openOutsideStage: "⚙ Settings" },
+  settings: {
+    open: "⏸ Settings",
+    title: "Settings",
+    resume: "Resume",
+    close: "Close",
+    bgm: "Music",
+    sfx: "Sound effects",
+    openOutsideStage: "⚙ Settings",
+  },
   hud: {
     stage: (n) => `Stage ${n}`,
     pp: (pp) => `PP ${pp}`,
@@ -199,14 +227,29 @@ const en: Messages = {
   },
   count: (count) => `×${count}`,
   modules: {
-    doublePpAndGrowth: { name: "Double PP & Growth", description: () => "Energy Cells give double PP and double growth" },
+    doublePpAndGrowth: {
+      name: "Double PP & Growth",
+      description: () => "Energy Cells give double PP and double growth",
+    },
     revive: { name: "Revive (Full)", description: () => "When HP reaches 0, revive with full HP (single use)" },
     reviveAtOneHp: { name: "Revive (Partial)", description: () => "When HP reaches 0, revive with 1 HP (single use)" },
-    timeLimitPlus5s: { name: "Time Extension (Permanent)", description: (c) => `Adds ${seconds(c.timeLimitPlusMs)}s to the time limit (permanent)` },
-    timeLimitBoostNextStage: { name: "Time Extension (Next Stage)", description: (c) => `Adds ${seconds(c.timeLimitBoostMs)}s to the time limit of the next stage only` },
-    wallDamageImmunity: { name: "Wall Damage Immunity", description: () => "Hitting a wall once costs no HP (not your own body, single use)" },
+    timeLimitPlus5s: {
+      name: "Time Extension (Permanent)",
+      description: (c) => `Adds ${seconds(c.timeLimitPlusMs)}s to the time limit (permanent)`,
+    },
+    timeLimitBoostNextStage: {
+      name: "Time Extension (Next Stage)",
+      description: (c) => `Adds ${seconds(c.timeLimitBoostMs)}s to the time limit of the next stage only`,
+    },
+    wallDamageImmunity: {
+      name: "Wall Damage Immunity",
+      description: () => "Hitting a wall once costs no HP (not your own body, single use)",
+    },
     maxHpPlus1: { name: "Max HP +1", description: () => "Raises max HP by 1" },
-    doublePpBattery: { name: "Double-PP Energy Cell", description: (c) => `${percent(c.doublePpBatteryChancePerStack)} chance that a double-PP Energy Cell appears` },
+    doublePpBattery: {
+      name: "Double-PP Energy Cell",
+      description: (c) => `${percent(c.doublePpBatteryChancePerStack)} chance that a double-PP Energy Cell appears`,
+    },
   },
 };
 

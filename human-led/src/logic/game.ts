@@ -3,7 +3,21 @@ import { centerOf, DIRECTIONS, hasFreeCell, insideBoard, neighbor, OPPOSITE, sam
 import { consumeAtStageStart, consumeOne, type Effects, effectsOf, REVIVE_HP } from "./modules";
 import { nextFloat, pick } from "./rng";
 import { placeWallPattern } from "./wallPatterns";
-import type { BatteryKind, Cell, ClearSummary, Direction, Game, GameEvent, ModuleId, Obstacle, RngState, RunSetup, RunState, StageState, StepResult } from "./types";
+import type {
+  BatteryKind,
+  Cell,
+  ClearSummary,
+  Direction,
+  Game,
+  GameEvent,
+  ModuleId,
+  Obstacle,
+  RngState,
+  RunSetup,
+  RunState,
+  StageState,
+  StepResult,
+} from "./types";
 
 export function startRun(seed: number, setup: RunSetup = {}): Game {
   const tuning = setup.tuning ?? DEFAULT_TUNING;
@@ -100,7 +114,10 @@ function resume(game: Extract<Game, { phase: "paused" }>, input: readonly Direct
   const direction = input.find((d) => d !== OPPOSITE[game.movement.direction]);
   if (direction === undefined) return game;
   const { movement } = game;
-  const resumed = movement.motion.kind === "stunned" ? { ...movement, queuedInputs: [direction] } : { ...movement, direction, queuedInputs: [] };
+  const resumed =
+    movement.motion.kind === "stunned"
+      ? { ...movement, queuedInputs: [direction] }
+      : { ...movement, direction, queuedInputs: [] };
   return { phase: "playing", run: game.run, stage: game.stage, movement: resumed };
 }
 
@@ -167,13 +184,21 @@ function recover(game: Playing, remainingMs: number): Playing {
   return {
     ...game,
     run: { ...game.run, rng },
-    movement: { direction, queuedInputs: [], motion: { kind: "moving", sinceLastMoveMs: 0 }, invincibleMs: game.run.tuning.config.invincibleMs },
+    movement: {
+      direction,
+      queuedInputs: [],
+      motion: { kind: "moving", sinceLastMoveMs: 0 },
+      invincibleMs: game.run.tuning.config.invincibleMs,
+    },
   };
 }
 
 function moveOneCell(game: Playing): StepResult {
   const [next, ...rest] = game.movement.queuedInputs;
-  const turned: Playing = { ...game, movement: { ...game.movement, direction: next ?? game.movement.direction, queuedInputs: rest } };
+  const turned: Playing = {
+    ...game,
+    movement: { ...game.movement, direction: next ?? game.movement.direction, queuedInputs: rest },
+  };
   const head = neighbor(game.stage.body[0], turned.movement.direction);
   const obstacle = obstacleAt(game, head);
   if (obstacle) return collide(turned, obstacle);
@@ -215,7 +240,9 @@ function eatBattery(game: Playing): StepResult {
   const [battery, batteryKind, rngAfterBattery] = spawnBattery(run.rng, occupied, effects, config.boardSize);
   const batteriesEaten = stage.batteriesEaten + 1;
   const reachedGoal = stage.goal === null && batteriesEaten >= config.batteriesToGoal;
-  const [goal, rngAfterGoal] = reachedGoal ? spawnOnFreeCell(rngAfterBattery, [...occupied, battery], config.boardSize) : [stage.goal, rngAfterBattery];
+  const [goal, rngAfterGoal] = reachedGoal
+    ? spawnOnFreeCell(rngAfterBattery, [...occupied, battery], config.boardSize)
+    : [stage.goal, rngAfterBattery];
   if (reachedGoal && goal) events.push({ type: "goalAppeared", at: goal });
   const pp = config.ppPerBattery * effects.batteryMultiplier * (stage.batteryKind === "doublePp" ? 2 : 1);
   const totalPp = run.totalPp + pp;
@@ -224,7 +251,12 @@ function eatBattery(game: Playing): StepResult {
     Math.floor(totalPp / config.heartEveryTotalPp) -
     Math.floor(run.totalPp / config.heartEveryTotalPp) +
     (heartRoll < config.heartWithBatteryChance ? 1 : 0);
-  const [newHearts, rng] = spawnHearts(rngAfterRoll, [...occupied, battery, ...(goal ? [goal] : [])], heartCount, config.boardSize);
+  const [newHearts, rng] = spawnHearts(
+    rngAfterRoll,
+    [...occupied, battery, ...(goal ? [goal] : [])],
+    heartCount,
+    config.boardSize,
+  );
   return {
     game: {
       ...game,
@@ -243,7 +275,12 @@ function eatBattery(game: Playing): StepResult {
   };
 }
 
-function spawnBattery(rng: RngState, occupied: readonly Cell[], effects: Effects, boardSize: number): [Cell, BatteryKind, RngState] {
+function spawnBattery(
+  rng: RngState,
+  occupied: readonly Cell[],
+  effects: Effects,
+  boardSize: number,
+): [Cell, BatteryKind, RngState] {
   const [cell, rngAfterCell] = spawnOnFreeCell(rng, occupied, boardSize);
   const [roll, next] = nextFloat(rngAfterCell);
   return [cell, roll < effects.doublePpBatteryChance ? "doublePp" : "normal", next];
@@ -264,7 +301,6 @@ function obstacleAt({ stage, run }: Playing, cell: Cell): Obstacle | null {
   if (blocking.some((b) => sameCell(b, cell))) return "body";
   return null;
 }
-
 
 function collide(game: Playing, obstacle: Obstacle): StepResult {
   // 体はすり抜けられる。無敵時間中ならダメージもない
@@ -307,6 +343,9 @@ function collide(game: Playing, obstacle: Obstacle): StepResult {
 /** 頭を向きの先のマスへ進める */
 function enter(game: Playing): Playing {
   const { body: current } = game.stage;
-  const body: StageState["body"] = [neighbor(current[0], game.movement.direction), ...current.slice(0, game.run.length - 1)];
+  const body: StageState["body"] = [
+    neighbor(current[0], game.movement.direction),
+    ...current.slice(0, game.run.length - 1),
+  ];
   return { ...game, stage: { ...game.stage, body } };
 }

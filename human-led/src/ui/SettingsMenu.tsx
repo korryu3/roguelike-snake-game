@@ -15,7 +15,8 @@ type Props = {
 
 export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPreview, onClose }: Props) {
   const { lang, volumes } = preferences;
-  const setVolumes = (next: Partial<Preferences["volumes"]>) => onChange({ ...preferences, volumes: { ...volumes, ...next } });
+  const setVolumes = (next: Partial<Preferences["volumes"]>) =>
+    onChange({ ...preferences, volumes: { ...volumes, ...next } });
   return (
     <div className="modal-backdrop">
       <section className="modal settings" role="dialog" aria-modal="true" aria-label={t.settings.title}>

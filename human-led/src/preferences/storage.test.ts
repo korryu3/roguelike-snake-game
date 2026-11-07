@@ -47,6 +47,8 @@ describe("createPreferencesStorage", () => {
   test("取り出せない環境では、既定の設定で、保存しても例外を出さない", () => {
     expect(createPreferencesStorage(failing).load()).toEqual(DEFAULT_PREFERENCES);
     expect(() => createPreferencesStorage(failing).save(DEFAULT_PREFERENCES)).not.toThrow();
-    expect(createPreferencesStorage(() => ({ getItem: failing, setItem: failing })).load()).toEqual(DEFAULT_PREFERENCES);
+    expect(createPreferencesStorage(() => ({ getItem: failing, setItem: failing })).load()).toEqual(
+      DEFAULT_PREFERENCES,
+    );
   });
 });

@@ -42,8 +42,10 @@ describe("openShop", () => {
   it("重ねられる上限まで持っているモジュールは候補に出ない", () => {
     const left: ModuleId[] = ["revive", "timeLimitBoostNextStage", "doublePpBattery"];
     for (const seed of seeds) {
-      const modules = offersOf(openShop(cleared({ modules: maxedExcept(left) }, seed)).game).map((offer) => offer.module);
-      expect([...modules].sort()).toEqual([...left].sort());
+      const modules = offersOf(openShop(cleared({ modules: maxedExcept(left) }, seed)).game).map(
+        (offer) => offer.module,
+      );
+      expect(modules.toSorted()).toEqual(left.toSorted());
     }
   });
 

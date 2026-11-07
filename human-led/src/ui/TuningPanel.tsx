@@ -32,7 +32,8 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
     setRevision((r) => r + 1);
     setMessages(notes);
   };
-  const setConfig = (key: keyof Config, value: number) => onChange({ ...draft, config: { ...draft.config, [key]: value } });
+  const setConfig = (key: keyof Config, value: number) =>
+    onChange({ ...draft, config: { ...draft.config, [key]: value } });
   const setSpec = (id: ModuleId, key: keyof ModuleSpec, value: number) =>
     onChange({ ...draft, modules: { ...draft.modules, [id]: { ...draft.modules[id], [key]: value } } });
   const setPattern = (index: number, pattern: WallPattern) =>
@@ -40,9 +41,13 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
   // 追加と削除では並びが変わるので、入力途中の文字列ごと作り直す
   const addPattern = () => {
     const size = draft.config.boardSize;
-    replace({ ...draft, wallPatterns: [...draft.wallPatterns, Array.from({ length: size }, () => ".".repeat(size))] }, []);
+    replace(
+      { ...draft, wallPatterns: [...draft.wallPatterns, Array.from({ length: size }, () => ".".repeat(size))] },
+      [],
+    );
   };
-  const removePattern = (index: number) => replace({ ...draft, wallPatterns: draft.wallPatterns.filter((_, i) => i !== index) }, []);
+  const removePattern = (index: number) =>
+    replace({ ...draft, wallPatterns: draft.wallPatterns.filter((_, i) => i !== index) }, []);
 
   const exportJson = async () => {
     const text = toJson(draft);
@@ -78,7 +83,10 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
           既定値に戻す
         </button>
       </div>
-      <p className={`tuning-note${hasPendingChanges ? "" : " tuning-note-placeholder"}`} aria-hidden={!hasPendingChanges}>
+      <p
+        className={`tuning-note${hasPendingChanges ? "" : " tuning-note-placeholder"}`}
+        aria-hidden={!hasPendingChanges}
+      >
         今のランにはまだ反映していない
       </p>
       {!saved && <p className="tuning-note">この環境では保存できない。閉じると消える</p>}
@@ -90,7 +98,11 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
             {CONFIG_KEYS.filter((key) => CONFIG_FIELDS[key].group === group).map((key) => (
               <label key={key} className="tuning-field">
                 <span>{CONFIG_FIELDS[key].label}</span>
-                <NumberInput rule={CONFIG_FIELDS[key].rule} value={draft.config[key]} onCommit={(v) => setConfig(key, v)} />
+                <NumberInput
+                  rule={CONFIG_FIELDS[key].rule}
+                  value={draft.config[key]}
+                  onCommit={(v) => setConfig(key, v)}
+                />
               </label>
             ))}
           </fieldset>
@@ -171,7 +183,17 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
   );
 }
 
-function NumberInput({ rule, value, onCommit, label }: { rule: Rule; value: number; onCommit: (value: number) => void; label?: string }) {
+function NumberInput({
+  rule,
+  value,
+  onCommit,
+  label,
+}: {
+  rule: Rule;
+  value: number;
+  onCommit: (value: number) => void;
+  label?: string;
+}) {
   const [text, setText] = useState(String(value));
   const parsed = text.trim() === "" ? Number.NaN : Number(text);
   const valid = satisfies(rule, parsed);
@@ -202,7 +224,15 @@ const PATTERN_ISSUES: Readonly<Record<WallPatternIssue, string>> = {
   blocksCenter: "中央のマスかそのまわりに壁がある",
 };
 
-function PatternInput({ label, pattern, onCommit }: { label: string; pattern: WallPattern; onCommit: (pattern: WallPattern) => void }) {
+function PatternInput({
+  label,
+  pattern,
+  onCommit,
+}: {
+  label: string;
+  pattern: WallPattern;
+  onCommit: (pattern: WallPattern) => void;
+}) {
   const [text, setText] = useState(patternToText(pattern));
   const issue = checkWallPattern(patternFromText(text));
   return (
@@ -236,5 +266,7 @@ function describeIssue(issue: TuningIssue): string {
   const pattern = /^wallPatterns\.(\d+)$/.exec(issue.path);
   if (pattern) return `${Number(pattern[1]) + 1}番目の壁のパターンは使えないので捨てた`;
   const field = FIELD_BY_PATH.get(issue.path);
-  return field ? `${field.label}は使えない値なので既定値にした（${describeRule(field.rule)}）` : `${issue.path}は使えない値なので既定値にした`;
+  return field
+    ? `${field.label}は使えない値なので既定値にした（${describeRule(field.rule)}）`
+    : `${issue.path}は使えない値なので既定値にした`;
 }

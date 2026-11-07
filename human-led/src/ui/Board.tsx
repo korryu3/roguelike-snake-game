@@ -16,11 +16,6 @@ export function Board({ game }: { game: Game }) {
   }, [game, dpr]);
 
   return (
-    <canvas
-      ref={ref}
-      width={size * dpr}
-      height={size * dpr}
-      style={{ width: size, height: size, display: "block" }}
-    />
+    <canvas ref={ref} width={size * dpr} height={size * dpr} style={{ width: size, height: size, display: "block" }} />
   );
 }

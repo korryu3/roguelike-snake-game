@@ -8,7 +8,10 @@ import type { Game, RunSetup } from "./types";
 
 /** バッテリーを1個食べてからゴールに入り、モジュールの画面を経て次のステージへ進む */
 const toNextStage = (setup: RunSetup = {}) => {
-  const run = ticks(begin("right", { battery: { x: 8, y: 7 }, goal: { x: 9, y: 7 }, batteriesEaten: CONFIG.batteriesToGoal, ...setup }), 2);
+  const run = ticks(
+    begin("right", { battery: { x: 8, y: 7 }, goal: { x: 9, y: 7 }, batteriesEaten: CONFIG.batteriesToGoal, ...setup }),
+    2,
+  );
   const shop = openShop(run.game).game;
   return { shop, next: nextStage(shop).game };
 };
@@ -41,7 +44,9 @@ describe("nextStage", () => {
       timeLimitMs: CONFIG.timeLimitMs,
       remainingMs: CONFIG.timeLimitMs,
     });
-    expect(DEFAULT_TUNING.wallPatterns.map((p) => placeWallPattern(p, TEST_TUNING.config.boardSize))).toContainEqual(stage.walls);
+    expect(DEFAULT_TUNING.wallPatterns.map((p) => placeWallPattern(p, TEST_TUNING.config.boardSize))).toContainEqual(
+      stage.walls,
+    );
   });
 
   it("制限時間+5秒を持っていると、持っている数だけ制限時間が延び、モジュールは残る", () => {

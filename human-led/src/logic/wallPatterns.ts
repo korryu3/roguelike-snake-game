@@ -3,12 +3,15 @@ import type { Cell, WallPattern, WallPatternIssue } from "./types";
 
 /** 使えるパターンならnull、使えなければその理由を返す */
 export function checkWallPattern(pattern: WallPattern): WallPatternIssue | null {
-  if (pattern.length === 0 || pattern.every((row) => row.length === 0)) return "empty";
+  // 行が1つもないときも、everyはtrueになる
+  if (pattern.every((row) => row.length === 0)) return "empty";
   if (pattern.some((row) => /[^#.]/.test(row))) return "badChar";
   if (pattern.some((row) => row.length !== pattern[0]!.length)) return "notRectangular";
   const cx = Math.floor(pattern[0]!.length / 2);
   const cy = Math.floor(pattern.length / 2);
-  const blocked = pattern.some((row, y) => [...row].some((ch, x) => ch === "#" && Math.abs(x - cx) <= 1 && Math.abs(y - cy) <= 1));
+  const blocked = pattern.some((row, y) =>
+    [...row].some((ch, x) => ch === "#" && Math.abs(x - cx) <= 1 && Math.abs(y - cy) <= 1),
+  );
   return blocked ? "blocksCenter" : null;
 }
 

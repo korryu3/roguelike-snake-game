@@ -27,7 +27,14 @@ describe("describeOffers", () => {
     expect(describeOffers(shop(0, offers, tuning), en)).toMatchObject([
       { offerIndex: 0, module: "revive", name: "Revive (Full)", price: 12, sold: false },
       { offerIndex: 1, module: "maxHpPlus1", name: "Max HP +1", price: 7, sold: true },
-      { offerIndex: 2, module: "timeLimitPlus5s", name: "Time Extension (Permanent)", description: expect.stringContaining("7s"), price: 4, sold: false },
+      {
+        offerIndex: 2,
+        module: "timeLimitPlus5s",
+        name: "Time Extension (Permanent)",
+        description: expect.stringContaining("7s"),
+        price: 4,
+        sold: false,
+      },
     ]);
   });
 
@@ -40,14 +47,19 @@ describe("describeOffers", () => {
   });
 
   test("値段は調整した数値から引く", () => {
-    const tuning: Tuning = { ...TEST_TUNING, modules: { ...DEFAULT_TUNING.modules, revive: { price: 3, maxStack: 2 } } };
+    const tuning: Tuning = {
+      ...TEST_TUNING,
+      modules: { ...DEFAULT_TUNING.modules, revive: { price: 3, maxStack: 2 } },
+    };
     expect(describeOffers(shop(3, offers, tuning), en)[0]).toMatchObject({ price: 3, affordable: true });
   });
 });
 
 describe("describeModules", () => {
   test("同じモジュールは1行にまとめ、数を数える。並びは最初に出てきた順", () => {
-    expect(describeModules(["maxHpPlus1", "revive", "maxHpPlus1", "wallDamageImmunity", "revive", "maxHpPlus1"], en)).toEqual([
+    expect(
+      describeModules(["maxHpPlus1", "revive", "maxHpPlus1", "wallDamageImmunity", "revive", "maxHpPlus1"], en),
+    ).toEqual([
       { module: "maxHpPlus1", name: "Max HP +1", count: 3 },
       { module: "revive", name: "Revive (Full)", count: 2 },
       { module: "wallDamageImmunity", name: "Wall Damage Immunity", count: 1 },

@@ -5,9 +5,7 @@ const direction = (d: string) => ({ kind: "direction", direction: d });
 
 describe("commandOfKey", () => {
   test("WASDは上・左・下・右の方向になる", () => {
-    expect(["KeyW", "KeyA", "KeyS", "KeyD"].map(commandOfKey)).toEqual(
-      ["up", "left", "down", "right"].map(direction),
-    );
+    expect(["KeyW", "KeyA", "KeyS", "KeyD"].map(commandOfKey)).toEqual(["up", "left", "down", "right"].map(direction));
   });
 
   test("矢印キーは上・左・下・右の方向になる", () => {
@@ -30,12 +28,9 @@ describe("isTypingTarget", () => {
   const element = (tagName: string, isContentEditable = false) => ({ tagName, isContentEditable });
 
   test("入力欄・テキスト欄・選択欄・編集可能な要素へのキーは、ゲームの操作にしない", () => {
-    expect([element("INPUT"), element("TEXTAREA"), element("SELECT"), element("DIV", true)].map(isTypingTarget)).toEqual([
-      true,
-      true,
-      true,
-      true,
-    ]);
+    expect(
+      [element("INPUT"), element("TEXTAREA"), element("SELECT"), element("DIV", true)].map(isTypingTarget),
+    ).toEqual([true, true, true, true]);
   });
 
   test("それ以外の要素へのキーは、ゲームの操作にする", () => {

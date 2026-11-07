@@ -20,6 +20,10 @@ export function pick<T>(state: RngState, items: readonly T[]): [T, RngState] {
 export function pickDistinct<T>(state: RngState, items: readonly T[], count: number): [T[], RngState] {
   if (count <= 0 || items.length === 0) return [[], state];
   const [item, next] = pick(state, items);
-  const [rest, last] = pickDistinct(next, items.filter((i) => i !== item), count - 1);
+  const [rest, last] = pickDistinct(
+    next,
+    items.filter((i) => i !== item),
+    count - 1,
+  );
   return [[item, ...rest], last];
 }

@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - "human-led/**"
+      - "mise.toml"
+      - ".github/workflows/ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  human-led:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: human-led
+    steps:
+      - uses: actions/checkout@v7
+
+      # nodeとpnpmの版は、リポジトリ直下のmise.tomlで決める
+      - uses: jdx/mise-action@v5
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run fmt:check
+      - run: pnpm run typecheck
+      - run: pnpm test
+      - run: pnpm run build
