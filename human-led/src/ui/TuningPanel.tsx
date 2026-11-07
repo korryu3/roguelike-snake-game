@@ -65,7 +65,7 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
   };
 
   return (
-    <aside className="tuning" aria-label="調整パネル">
+    <aside className="tuning" aria-label="調整パネル" data-silent>
       <header className="tuning-header">
         <h2>数値の調整</h2>
         <span className="tuning-hint">Tで閉じる。開いているあいだは止まる</span>

@@ -1,36 +1,27 @@
-import { LANG_NAMES, LANGS, type Lang } from "../i18n/lang";
 import type { Messages } from "../i18n/messages";
 import type { Game } from "../logic/types";
 import { ModuleChips } from "./Hud";
 import { describeModules } from "./view";
 
+/** 日本語を読めない人も見つけられるように、タイトルの設定ボタンは言語によらず両方の言葉で出す */
+const TITLE_SETTINGS_LABEL = "⚙ 設定 / Settings";
+
 type TitleProps = {
   readonly t: Messages;
-  readonly lang: Lang;
-  readonly onLangChange: (lang: Lang) => void;
   readonly onStart: () => void;
+  readonly onOpenSettings: () => void;
 };
 
-export function TitleScreen({ t, lang, onLangChange, onStart }: TitleProps) {
+export function TitleScreen({ t, onStart, onOpenSettings }: TitleProps) {
   return (
     <section className="screen title-screen">
       <h1 className="game-title">{t.title}</h1>
       <button type="button" className="button button-primary button-large" autoFocus onClick={onStart}>
         {t.startGame}
       </button>
-      <div className="lang-switch" role="group" aria-label={t.language}>
-        {LANGS.map((l) => (
-          <button
-            key={l}
-            type="button"
-            className={l === lang ? "button lang-current" : "button"}
-            aria-pressed={l === lang}
-            onClick={() => onLangChange(l)}
-          >
-            {LANG_NAMES[l]}
-          </button>
-        ))}
-      </div>
+      <button type="button" className="button" onClick={onOpenSettings}>
+        {TITLE_SETTINGS_LABEL}
+      </button>
     </section>
   );
 }
@@ -40,9 +31,10 @@ type GameOverProps = {
   readonly t: Messages;
   readonly onRetry: () => void;
   readonly onTitle: () => void;
+  readonly onOpenSettings: () => void;
 };
 
-export function GameOverScreen({ game, t, onRetry, onTitle }: GameOverProps) {
+export function GameOverScreen({ game, t, onRetry, onTitle, onOpenSettings }: GameOverProps) {
   const { run } = game;
   const g = t.gameOver;
   return (
@@ -74,6 +66,9 @@ export function GameOverScreen({ game, t, onRetry, onTitle }: GameOverProps) {
           {g.retry}
         </button>
       </div>
+      <button type="button" className="button" onClick={onOpenSettings}>
+        {t.settings.openOutsideStage}
+      </button>
     </section>
   );
 }

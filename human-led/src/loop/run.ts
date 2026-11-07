@@ -22,9 +22,10 @@ export function startLoop(session: Session): void {
   };
   const onVisibilityChange = () => (document.hidden ? pause() : resume());
   const onKeyDown = (event: KeyboardEvent) => {
-    if (event.target instanceof HTMLElement && isTypingTarget(event.target)) return;
     const command = commandOfKey(event.code);
     if (command === null) return;
+    // 入力欄にいるときも、Escだけは設定メニューの開閉に使う
+    if (command.kind !== "toggleMenu" && event.target instanceof HTMLElement && isTypingTarget(event.target)) return;
     event.preventDefault();
     if (!event.repeat) session.command(command);
   };

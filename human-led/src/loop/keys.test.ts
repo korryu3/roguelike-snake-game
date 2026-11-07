@@ -18,6 +18,7 @@ describe("commandOfKey", () => {
 
   test("Tはパネルの開閉になる", () => {
     expect(commandOfKey("KeyT")).toEqual({ kind: "togglePanel" });
+    expect(commandOfKey("Escape")).toEqual({ kind: "toggleMenu" });
   });
 
   test("ほかのキーは何にもならない", () => {

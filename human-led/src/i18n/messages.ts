@@ -11,8 +11,17 @@ export type Messages = {
   readonly language: string;
   readonly controls: string;
   readonly pressToStart: string;
-  /** 音のボタンには、今の状態を出す */
-  readonly sound: { readonly on: string; readonly off: string };
+  readonly pressToResume: string;
+  readonly settings: {
+    readonly open: string;
+    readonly title: string;
+    readonly resume: string;
+    readonly close: string;
+    readonly bgm: string;
+    readonly sfx: string;
+    /** ステージ以外の画面に置くボタン。止めるものがないので⏸ではなく⚙にする */
+    readonly openOutsideStage: string;
+  };
   readonly hud: {
     readonly stage: (stageNumber: number) => string;
     readonly pp: (pp: number) => string;
@@ -73,7 +82,8 @@ const ja: Messages = {
   language: "言語",
   controls: "WASD / 矢印キーで操作",
   pressToStart: "方向キーで開始",
-  sound: { on: "音 ON", off: "音 OFF" },
+  pressToResume: "方向キーで再開",
+  settings: { open: "⏸ 設定", title: "設定", resume: "再開", close: "閉じる", bgm: "BGM", sfx: "効果音", openOutsideStage: "⚙ 設定" },
   hud: {
     stage: (n) => `ステージ ${n}`,
     pp: (pp) => `PP ${pp}`,
@@ -139,7 +149,8 @@ const en: Messages = {
   language: "Language",
   controls: "Move with WASD / Arrow keys",
   pressToStart: "Press a direction key to start",
-  sound: { on: "Sound ON", off: "Sound OFF" },
+  pressToResume: "Press a direction key to resume",
+  settings: { open: "⏸ Settings", title: "Settings", resume: "Resume", close: "Close", bgm: "Music", sfx: "Sound effects", openOutsideStage: "⚙ Settings" },
   hud: {
     stage: (n) => `Stage ${n}`,
     pp: (pp) => `PP ${pp}`,

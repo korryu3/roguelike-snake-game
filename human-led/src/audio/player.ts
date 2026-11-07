@@ -7,6 +7,7 @@ import hitUrl from "../assets/sounds/hit.mp3";
 import pickupUrl from "../assets/sounds/pickup.mp3";
 import reviveUrl from "../assets/sounds/revive.mp3";
 import type { BgmLevel, SoundId } from "./cues";
+import { bgmVolume, type Volumes } from "./volume";
 
 const SOUND_URLS: Readonly<Record<SoundId, string>> = {
   pickup: pickupUrl,
@@ -18,19 +19,16 @@ const SOUND_URLS: Readonly<Record<SoundId, string>> = {
   button: buttonUrl,
 };
 
-/** 音量は例。聞いてから調整する */
-const SOUND_VOLUME = 0.6;
-const BGM_VOLUME: Readonly<Record<BgmLevel, number>> = { normal: 0.4, ducked: 0.12 };
-
 export type AudioPlayer = {
   readonly play: (sound: SoundId) => void;
   /** ブラウザは、クリックなどの操作の中でしか音を鳴らし始められない */
   readonly startBgm: () => void;
   readonly setBgmLevel: (level: BgmLevel) => void;
-  readonly setMuted: (muted: boolean) => void;
+  readonly setVolumes: (volumes: Volumes) => void;
 };
 
-export function createAudioPlayer(initiallyMuted: boolean): AudioPlayer {
+/** ブラウザの音の再生をまとめる。何を鳴らすかは決めない */
+export function createAudioPlayer(initialVolumes: Volumes): AudioPlayer {
   const sounds = Object.fromEntries(
     Object.entries(SOUND_URLS).map(([id, url]) => {
       const audio = new Audio(url);
@@ -40,30 +38,34 @@ export function createAudioPlayer(initiallyMuted: boolean): AudioPlayer {
   ) as Record<SoundId, HTMLAudioElement>;
   const bgm = new Audio(bgmUrl);
   bgm.loop = true;
-  bgm.volume = BGM_VOLUME.ducked;
-  let muted = initiallyMuted;
-  bgm.muted = muted;
+  let volumes = initialVolumes;
+  let level: BgmLevel = "ducked";
+  const applyBgmVolume = () => {
+    bgm.volume = bgmVolume(volumes, level);
+  };
+  applyBgmVolume();
 
   // 再生できなかったとき（自動再生の制限など）は、音なしで続ける
   const ignore = () => {};
 
   return {
     play: (sound) => {
-      if (muted) return;
+      if (volumes.sfx === 0) return;
       // 同じ音が続けて鳴っても重ねられるように、毎回複製して鳴らす
       const audio = sounds[sound].cloneNode() as HTMLAudioElement;
-      audio.volume = SOUND_VOLUME;
+      audio.volume = volumes.sfx;
       audio.play().catch(ignore);
     },
     startBgm: () => {
       if (bgm.paused) bgm.play().catch(ignore);
     },
-    setBgmLevel: (level) => {
-      bgm.volume = BGM_VOLUME[level];
+    setBgmLevel: (next) => {
+      level = next;
+      applyBgmVolume();
     },
-    setMuted: (next) => {
-      muted = next;
-      bgm.muted = next;
+    setVolumes: (next) => {
+      volumes = next;
+      applyBgmVolume();
     },
   };
 }

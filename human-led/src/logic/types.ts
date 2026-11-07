@@ -84,6 +84,8 @@ export type Game =
       readonly stage: StageState;
       readonly movement: Movement;
     }
+  /** 一時停止。方向キーを押すまで止まったまま */
+  | { readonly phase: "paused"; readonly run: RunState; readonly stage: StageState; readonly movement: Movement }
   /** 生き返ったら中央から出直すので、動きの状態は持たない */
   | { readonly phase: "reviveChoice"; readonly run: RunState; readonly stage: StageState }
   | { readonly phase: "cleared"; readonly run: RunState; readonly stage: StageState; readonly summary: ClearSummary }

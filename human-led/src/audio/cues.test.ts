@@ -66,14 +66,15 @@ describe("soundsFor", () => {
 
 describe("bgmLevel", () => {
   it("ステージ中は元の音量", () => {
-    for (const phase of ["awaitingStart", "playing", "reviveChoice"] as const) expect(bgmLevel(false, phase)).toBe("normal");
+    for (const phase of ["awaitingStart", "playing", "paused", "reviveChoice"] as const) expect(bgmLevel("stage", phase)).toBe("normal");
   });
 
   it("クリアのモーダルとモジュールの画面とゲームオーバーでは下げる", () => {
-    for (const phase of ["cleared", "shop", "gameOver"] as const) expect(bgmLevel(false, phase)).toBe("ducked");
+    for (const phase of ["cleared", "shop"] as const) expect(bgmLevel("stage", phase)).toBe("ducked");
+    expect(bgmLevel("gameOver", "gameOver")).toBe("ducked");
   });
 
   it("タイトルでは下げる", () => {
-    expect(bgmLevel(true, "awaitingStart")).toBe("ducked");
+    expect(bgmLevel("title", "awaitingStart")).toBe("ducked");
   });
 });

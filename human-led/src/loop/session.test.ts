@@ -62,12 +62,12 @@ describe("createSession", () => {
       session.advance(0);
       const playing = session.store.getSnapshot();
       session.command({ kind: "togglePanel" });
-      expect(session.panelOpen.getSnapshot()).toBe(true);
+      expect(session.view.getSnapshot().panelOpen).toBe(true);
       session.command({ kind: "direction", direction: "left" });
       session.advance(1_000);
       expect(session.store.getSnapshot()).toBe(playing);
       session.command({ kind: "togglePanel" });
-      expect(session.panelOpen.getSnapshot()).toBe(false);
+      expect(session.view.getSnapshot().panelOpen).toBe(false);
       session.advance(0);
       const game = session.store.getSnapshot();
       if (game.phase !== "playing") throw new Error(game.phase);
@@ -78,7 +78,67 @@ describe("createSession", () => {
       const session = createSession(seeds(1, 2));
       session.command({ kind: "togglePanel" });
       session.restart(DEFAULT_TUNING);
-      expect(session.panelOpen.getSnapshot()).toBe(false);
+      expect(session.view.getSnapshot().panelOpen).toBe(false);
+    });
+  });
+
+  describe("タイトル", () => {
+    test("最初はタイトルにいて、新しいランを始めるとタイトルを出て、その数値で始め直す", () => {
+      const session = createSession(seeds(1, 2), TEST_TUNING);
+      expect(session.view.getSnapshot().onTitle).toBe(true);
+      session.startNewRun();
+      expect(session.view.getSnapshot().onTitle).toBe(false);
+      expect(session.store.getSnapshot()).toEqual(startRun(2, { tuning: TEST_TUNING }));
+    });
+
+    test("タイトルへ戻ると、タイトルにいる", () => {
+      const session = createSession(seeds(1, 2), TEST_TUNING);
+      session.startNewRun();
+      session.goToTitle();
+      expect(session.view.getSnapshot().onTitle).toBe(true);
+    });
+  });
+
+  describe("設定メニュー", () => {
+    const playingSession = () => {
+      const session = createSession(seeds(1), TEST_TUNING);
+      session.command({ kind: "direction", direction: "up" });
+      session.advance(0);
+      return session;
+    };
+
+    test("ステージ中に開くと止まり、閉じても止まったまま", () => {
+      const session = playingSession();
+      session.command({ kind: "toggleMenu" });
+      expect(session.view.getSnapshot().menuOpen).toBe(true);
+      expect(session.store.getSnapshot().phase).toBe("paused");
+      session.command({ kind: "toggleMenu" });
+      expect(session.view.getSnapshot().menuOpen).toBe(false);
+      session.advance(1_000);
+      expect(session.store.getSnapshot().phase).toBe("paused");
+    });
+
+    test("開いているあいだは、方向キーも時間も無視する", () => {
+      const session = playingSession();
+      session.command({ kind: "toggleMenu" });
+      const paused = session.store.getSnapshot();
+      session.command({ kind: "direction", direction: "left" });
+      session.advance(1_000);
+      expect(session.store.getSnapshot()).toBe(paused);
+      session.command({ kind: "toggleMenu" });
+      session.advance(0);
+      expect(session.store.getSnapshot().phase).toBe("paused");
+      session.command({ kind: "direction", direction: "left" });
+      session.advance(0);
+      expect(session.store.getSnapshot()).toMatchObject({ phase: "playing", movement: { direction: "left" } });
+    });
+
+    test("ステージ中以外では、開いてもゲームは変わらない", () => {
+      const game = cleared();
+      const session = createSession(seeds(1), TEST_TUNING, () => game);
+      session.command({ kind: "toggleMenu" });
+      expect(session.view.getSnapshot().menuOpen).toBe(true);
+      expect(session.store.getSnapshot()).toBe(game);
     });
   });
 
