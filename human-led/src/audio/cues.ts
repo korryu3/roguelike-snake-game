@@ -1,4 +1,5 @@
 import type { Game, GameEvent } from "../logic/types";
+import type { Screen } from "../loop/view";
 
 export type SoundId = "pickup" | "hit" | "goal" | "revive" | "clear" | "gameOver" | "button";
 
@@ -27,7 +28,7 @@ const EVENT_SOUNDS: Readonly<Record<GameEvent["type"], SoundId | null>> = {
 export type BgmLevel = "normal" | "ducked";
 
 /** クリアとゲームオーバーの音が聞こえるように、その画面のあいだはBGMを下げる */
-export function bgmLevel(onTitle: boolean, phase: Game["phase"]): BgmLevel {
-  if (onTitle) return "ducked";
-  return phase === "cleared" || phase === "shop" || phase === "gameOver" ? "ducked" : "normal";
+export function bgmLevel(screen: Screen, phase: Game["phase"]): BgmLevel {
+  if (screen !== "stage") return "ducked";
+  return phase === "cleared" || phase === "shop" ? "ducked" : "normal";
 }

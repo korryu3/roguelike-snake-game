@@ -62,12 +62,12 @@ describe("createSession", () => {
       session.advance(0);
       const playing = session.store.getSnapshot();
       session.command({ kind: "togglePanel" });
-      expect(session.panelOpen.getSnapshot()).toBe(true);
+      expect(session.view.getSnapshot().panelOpen).toBe(true);
       session.command({ kind: "direction", direction: "left" });
       session.advance(1_000);
       expect(session.store.getSnapshot()).toBe(playing);
       session.command({ kind: "togglePanel" });
-      expect(session.panelOpen.getSnapshot()).toBe(false);
+      expect(session.view.getSnapshot().panelOpen).toBe(false);
       session.advance(0);
       const game = session.store.getSnapshot();
       if (game.phase !== "playing") throw new Error(game.phase);
@@ -78,7 +78,24 @@ describe("createSession", () => {
       const session = createSession(seeds(1, 2));
       session.command({ kind: "togglePanel" });
       session.restart(DEFAULT_TUNING);
-      expect(session.panelOpen.getSnapshot()).toBe(false);
+      expect(session.view.getSnapshot().panelOpen).toBe(false);
+    });
+  });
+
+  describe("タイトル", () => {
+    test("最初はタイトルにいて、新しいランを始めるとタイトルを出て、その数値で始め直す", () => {
+      const session = createSession(seeds(1, 2), TEST_TUNING);
+      expect(session.view.getSnapshot().onTitle).toBe(true);
+      session.startNewRun();
+      expect(session.view.getSnapshot().onTitle).toBe(false);
+      expect(session.store.getSnapshot()).toEqual(startRun(2, { tuning: TEST_TUNING }));
+    });
+
+    test("タイトルへ戻ると、タイトルにいる", () => {
+      const session = createSession(seeds(1, 2), TEST_TUNING);
+      session.startNewRun();
+      session.goToTitle();
+      expect(session.view.getSnapshot().onTitle).toBe(true);
     });
   });
 
@@ -93,10 +110,10 @@ describe("createSession", () => {
     test("ステージ中に開くと止まり、閉じても止まったまま", () => {
       const session = playingSession();
       session.command({ kind: "toggleMenu" });
-      expect(session.menuOpen.getSnapshot()).toBe(true);
+      expect(session.view.getSnapshot().menuOpen).toBe(true);
       expect(session.store.getSnapshot().phase).toBe("paused");
       session.command({ kind: "toggleMenu" });
-      expect(session.menuOpen.getSnapshot()).toBe(false);
+      expect(session.view.getSnapshot().menuOpen).toBe(false);
       session.advance(1_000);
       expect(session.store.getSnapshot().phase).toBe("paused");
     });
@@ -120,7 +137,7 @@ describe("createSession", () => {
       const game = cleared();
       const session = createSession(seeds(1), TEST_TUNING, () => game);
       session.command({ kind: "toggleMenu" });
-      expect(session.menuOpen.getSnapshot()).toBe(true);
+      expect(session.view.getSnapshot().menuOpen).toBe(true);
       expect(session.store.getSnapshot()).toBe(game);
     });
   });
