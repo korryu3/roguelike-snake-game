@@ -11,6 +11,8 @@ export type Messages = {
   readonly language: string;
   readonly controls: string;
   readonly pressToStart: string;
+  /** 音のボタンには、今の状態を出す */
+  readonly sound: { readonly on: string; readonly off: string };
   readonly hud: {
     readonly stage: (stageNumber: number) => string;
     readonly pp: (pp: number) => string;
@@ -71,6 +73,7 @@ const ja: Messages = {
   language: "言語",
   controls: "WASD / 矢印キーで操作",
   pressToStart: "方向キーで開始",
+  sound: { on: "音 ON", off: "音 OFF" },
   hud: {
     stage: (n) => `ステージ ${n}`,
     pp: (pp) => `PP ${pp}`,
@@ -136,6 +139,7 @@ const en: Messages = {
   language: "Language",
   controls: "Move with WASD / Arrow keys",
   pressToStart: "Press a direction key to start",
+  sound: { on: "Sound ON", off: "Sound OFF" },
   hud: {
     stage: (n) => `Stage ${n}`,
     pp: (pp) => `PP ${pp}`,

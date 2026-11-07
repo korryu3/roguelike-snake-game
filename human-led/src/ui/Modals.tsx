@@ -86,7 +86,7 @@ export function ReviveModal({ game, t, perform }: Props<"reviveChoice">) {
       <ul className="revive-options">
         {reviveOptions(game.run, t).map((option) => (
           <li key={option.module}>
-            <button type="button" className="button revive-option" onClick={() => perform({ kind: "revive", module: option.module })}>
+            <button type="button" className="button revive-option" data-silent onClick={() => perform({ kind: "revive", module: option.module })}>
               <span className="revive-name">
                 {option.name}
                 <span className="chip-count">{t.count(option.count)}</span>

@@ -4,7 +4,7 @@ import { startRun } from "../logic/game";
 import { openShop } from "../logic/shop";
 import { begin, cleared, TEST_TUNING, tick } from "../logic/testing";
 import type { Game, ModuleId } from "../logic/types";
-import { createSession } from "./session";
+import { type Change, createSession } from "./session";
 
 const seeds = (...values: number[]) => () => {
   const seed = values.shift();
@@ -133,6 +133,47 @@ describe("createSession", () => {
         session.perform(action);
       }
       expect(session.store.getSnapshot()).toBe(before);
+    });
+  });
+
+  describe("onChange", () => {
+    const listen = (session: ReturnType<typeof createSession>) => {
+      const changes: Change[] = [];
+      session.onChange((change) => changes.push(change));
+      return changes;
+    };
+
+    test("進めたときに、前の状態と次の状態とイベントを知らせる", () => {
+      const prev = begin("right", { battery: { x: 8, y: 7 } });
+      const session = createSession(seeds(1), TEST_TUNING, () => prev);
+      const changes = listen(session);
+      session.advance(CONFIG.moveIntervalMs);
+      expect(changes).toEqual([{ prev, next: session.store.getSnapshot(), events: [{ type: "batteryEaten", at: { x: 8, y: 7 } }] }]);
+    });
+
+    test("画面の操作でも知らせる", () => {
+      const prev = tick(begin("right", { walls: [{ x: 8, y: 7 }], hp: 1, modules: ["revive"] })).game;
+      const session = createSession(seeds(1), TEST_TUNING, () => prev);
+      const changes = listen(session);
+      session.perform({ kind: "revive", module: "revive" });
+      expect(changes).toEqual([{ prev, next: session.store.getSnapshot(), events: [{ type: "revived" }] }]);
+    });
+
+    test("始め直したときも、イベントなしで知らせる", () => {
+      const session = createSession(seeds(1, 2), TEST_TUNING);
+      const prev = session.store.getSnapshot();
+      const changes = listen(session);
+      session.restart(TEST_TUNING);
+      expect(changes).toEqual([{ prev, next: session.store.getSnapshot(), events: [] }]);
+    });
+
+    test("やめたあとは知らせない", () => {
+      const session = createSession(seeds(1, 2), TEST_TUNING);
+      const changes: Change[] = [];
+      const stop = session.onChange((change) => changes.push(change));
+      stop();
+      session.restart(TEST_TUNING);
+      expect(changes).toEqual([]);
     });
   });
 });
