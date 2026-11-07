@@ -1,6 +1,6 @@
 # ログスネ（human-led）
 
-人間がコンセプトとルールを決め、AIに実装させたローグライク風スネーク。ルールは[docs/concept.md](./docs/concept.md)、決めた理由は[docs/discussions/](./docs/discussions/)を参照する。
+人間がコンセプトとルールを決め、AIに実装させたローグライク風スネーク。ルールは[docs/concept.md](./docs/concept.md)、決めた理由は[docs/discussions/](./docs/discussions/)、コードがどう動いているかは[docs/internals/](./docs/internals/)を参照する。
 
 ## 開発の始め方
 
