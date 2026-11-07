@@ -19,11 +19,11 @@ export function drawGame(ctx: Ctx, game: Game, colors: BoardColors, images: Spri
   const { boardSize } = game.run.tuning.config;
   drawFloor(p, boardSize);
   drawWalls(p, stage.walls);
+  drawSnake(p, stage.body, "movement" in game ? game.movement : null);
+  // 空きマスがないときは体の上にも置くので、ものは体より手前に描く
   drawBattery(p, stage.battery, stage.batteryKind);
   if (stage.goal) drawGoal(p, stage.goal);
   drawHearts(p, stage.hearts);
-  const movement = "movement" in game ? game.movement : null;
-  drawSnake(p, stage.body, movement);
 }
 
 /** 画像を、縦横比を保ったままマスに収まる大きさで、マスの中央に描く。degreesだけ回す */

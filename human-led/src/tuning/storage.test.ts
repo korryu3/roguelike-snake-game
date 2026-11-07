@@ -24,6 +24,33 @@ describe("createTuningStorage", () => {
     expect(createTuningStorage(() => storage).load()).toEqual(changed);
   });
 
+  test("既定値から変えた項目だけを保存する", () => {
+    const storage = memory();
+    const tuning: Tuning = {
+      ...changed,
+      modules: { ...DEFAULT_TUNING.modules, revive: { ...DEFAULT_TUNING.modules.revive, price: 3 } },
+    };
+    createTuningStorage(() => storage).save(tuning);
+    const [saved] = storage.items.values();
+    expect(JSON.parse(saved ?? "")).toEqual({ config: { moveIntervalMs: 90 }, modules: { revive: { price: 3 } } });
+  });
+
+  test("壁のパターンを編集したら、一覧ごと保存する", () => {
+    const storage = memory();
+    const wallPatterns = [...DEFAULT_TUNING.wallPatterns, ["#...#"]];
+    createTuningStorage(() => storage).save({ ...DEFAULT_TUNING, wallPatterns });
+    const [saved] = storage.items.values();
+    expect(JSON.parse(saved ?? "")).toEqual({ wallPatterns });
+  });
+
+  test("何も変えていなければ、空のオブジェクトを保存し、読むと既定値になる", () => {
+    const storage = memory();
+    createTuningStorage(() => storage).save(DEFAULT_TUNING);
+    const [saved] = storage.items.values();
+    expect(JSON.parse(saved ?? "")).toEqual({});
+    expect(createTuningStorage(() => storage).load()).toEqual(DEFAULT_TUNING);
+  });
+
   test("何も保存されていなければ既定値", () => {
     expect(createTuningStorage(memory).load()).toEqual(DEFAULT_TUNING);
   });

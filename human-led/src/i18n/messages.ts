@@ -137,7 +137,10 @@ const ja: Messages = {
   },
   count: (count) => `×${count}`,
   modules: {
-    doublePpAndGrowth: { name: "PP・伸び2倍", description: () => "バッテリーから取得できるPPと体の伸びが2倍になる" },
+    doublePpAndGrowth: {
+      name: "PP・伸び2倍",
+      description: () => "バッテリーから取得できるPPと体の伸びが2倍になる。重ねると1つにつき1倍ずつ増える（2つで3倍）",
+    },
     revive: { name: "1回復活（完全回復）", description: () => "HPが0になったらHP満タンで復活（使い切り）" },
     reviveAtOneHp: { name: "1回復活（一部回復）", description: () => "HPが0になったらHP1で復活（使い切り）" },
     timeLimitPlus5s: {
@@ -225,7 +228,7 @@ const en: Messages = {
   modules: {
     doublePpAndGrowth: {
       name: "Double PP & Growth",
-      description: () => "Energy Cells give double PP and double growth",
+      description: () => "Energy Cells give double PP and double growth. Each extra copy adds 1x (two copies: 3x)",
     },
     revive: { name: "Revive (Full)", description: () => "When HP reaches 0, revive with full HP (single use)" },
     reviveAtOneHp: { name: "Revive (Partial)", description: () => "When HP reaches 0, revive with 1 HP (single use)" },

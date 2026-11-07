@@ -1,5 +1,5 @@
 import { DEFAULT_TUNING } from "../config";
-import { centerOf, DIRECTIONS, hasFreeCell, insideBoard, neighbor, OPPOSITE, sameCell, spawnOnFreeCell } from "./board";
+import { centerOf, DIRECTIONS, insideBoard, neighbor, OPPOSITE, placeableCells, sameCell, spawnCell } from "./board";
 import { consumeAtStageStart, consumeOne, type Effects, effectsOf, REVIVE_HP } from "./modules";
 import { nextFloat, pick } from "./rng";
 import { placeWallPattern } from "./wallPatterns";
@@ -47,7 +47,7 @@ function enterStage(run: RunState, setup: RunSetup = {}): Game {
   const walls = setup.walls ?? placeWallPattern(pattern, config.boardSize);
   const body: StageState["body"] = [centerOf(config.boardSize)];
   const effects = effectsOf(run.modules, config);
-  const [spawned, spawnedKind, rng] = spawnBattery(rngAfterWalls, [...walls, ...body], effects, config.boardSize);
+  const [spawned, spawnedKind, rng] = spawnBattery(rngAfterWalls, walls, body, effects, config.boardSize);
   const { timeLimitMs } = effects;
   return {
     phase: "awaitingStart",
@@ -138,6 +138,12 @@ function startPlaying(game: Extract<Game, { phase: "awaitingStart" }>, input: re
 }
 
 function enqueue(game: Playing, input: readonly Direction[]): Playing {
+  // 止まっているあいだは、最後に押した方向だけを覚える。真後ろ（首の方向）は捨てる
+  if (game.movement.motion.kind === "stunned") {
+    const last = input.findLast((d) => d !== OPPOSITE[game.movement.direction]);
+    if (last === undefined) return game;
+    return { ...game, movement: { ...game.movement, queuedInputs: [last] } };
+  }
   const queuedInputs = input.reduce<readonly Direction[]>((queue, direction) => {
     const last = queue.at(-1) ?? game.movement.direction;
     if (queue.length >= game.run.tuning.config.inputQueueLimit || direction === OPPOSITE[last]) return queue;
@@ -202,11 +208,21 @@ function moveOneCell(game: Playing): StepResult {
   const head = neighbor(game.stage.body[0], turned.movement.direction);
   const obstacle = obstacleAt(game, head);
   if (obstacle) return collide(turned, obstacle);
-  const moved = enter(turned);
-  if (game.stage.goal && sameCell(head, game.stage.goal)) return clearStage(moved);
-  if (sameCell(head, game.stage.battery)) return eatBattery(moved);
-  if (game.stage.hearts.some((h) => sameCell(h, head))) return collectHeart(moved, head);
-  return { game: moved, events: [] };
+  return arrive(enter(turned));
+}
+
+/** 頭が入ったマスのものを取る。体をすり抜けて入ったときも同じ。eventsは、入る前に起きたこと */
+function arrive(game: Playing, events: readonly GameEvent[] = []): StepResult {
+  const collected = collect(game);
+  return { game: collected.game, events: [...events, ...collected.events] };
+}
+
+function collect(game: Playing): StepResult {
+  const head = game.stage.body[0];
+  if (game.stage.goal && sameCell(head, game.stage.goal)) return clearStage(game);
+  if (sameCell(head, game.stage.battery)) return eatBattery(game);
+  if (game.stage.hearts.some((h) => sameCell(h, head))) return collectHeart(game, head);
+  return { game, events: [] };
 }
 
 function collectHeart(game: Playing, at: Cell): StepResult {
@@ -224,7 +240,8 @@ function clearStage({ run, stage }: Playing): StepResult {
     stageNumber: run.stageNumber,
     ppEarned: stage.ppEarned,
     batteryScore: stage.batteriesEaten * config.scorePerBattery,
-    timeBonus: Math.floor(stage.remainingMs / 1000) * config.timeBonusPerSecond,
+    // 表示（formatRemainingTime）と同じく切り上げる。「0:05」でゴールしたら5秒分
+    timeBonus: Math.ceil(stage.remainingMs / 1000) * config.timeBonusPerSecond,
     elapsedMs: stage.timeLimitMs - stage.remainingMs,
   };
   const scored = { ...run, score: run.score + summary.batteryScore + summary.timeBonus };
@@ -236,12 +253,12 @@ function eatBattery(game: Playing): StepResult {
   const { config } = run.tuning;
   const effects = effectsOf(run.modules, config);
   const events: GameEvent[] = [{ type: "batteryEaten", at: stage.battery }];
-  const occupied = [...stage.walls, ...stage.body, ...stage.hearts, ...(stage.goal ? [stage.goal] : [])];
-  const [battery, batteryKind, rngAfterBattery] = spawnBattery(run.rng, occupied, effects, config.boardSize);
+  const blocked = [...stage.walls, ...stage.hearts, ...(stage.goal ? [stage.goal] : [])];
+  const [battery, batteryKind, rngAfterBattery] = spawnBattery(run.rng, blocked, stage.body, effects, config.boardSize);
   const batteriesEaten = stage.batteriesEaten + 1;
   const reachedGoal = stage.goal === null && batteriesEaten >= config.batteriesToGoal;
   const [goal, rngAfterGoal] = reachedGoal
-    ? spawnOnFreeCell(rngAfterBattery, [...occupied, battery], config.boardSize)
+    ? spawnCell(rngAfterBattery, [...blocked, battery], stage.body, config.boardSize)
     : [stage.goal, rngAfterBattery];
   if (reachedGoal && goal) events.push({ type: "goalAppeared", at: goal });
   const pp = config.ppPerBattery * effects.batteryMultiplier * (stage.batteryKind === "doublePp" ? 2 : 1);
@@ -253,7 +270,8 @@ function eatBattery(game: Playing): StepResult {
     (heartRoll < config.heartWithBatteryChance ? 1 : 0);
   const [newHearts, rng] = spawnHearts(
     rngAfterRoll,
-    [...occupied, battery, ...(goal ? [goal] : [])],
+    [...blocked, battery, ...(goal ? [goal] : [])],
+    stage.body,
     heartCount,
     config.boardSize,
   );
@@ -277,20 +295,27 @@ function eatBattery(game: Playing): StepResult {
 
 function spawnBattery(
   rng: RngState,
-  occupied: readonly Cell[],
+  blocked: readonly Cell[],
+  body: readonly Cell[],
   effects: Effects,
   boardSize: number,
 ): [Cell, BatteryKind, RngState] {
-  const [cell, rngAfterCell] = spawnOnFreeCell(rng, occupied, boardSize);
+  const [cell, rngAfterCell] = spawnCell(rng, blocked, body, boardSize);
   const [roll, next] = nextFloat(rngAfterCell);
   return [cell, roll < effects.doublePpBatteryChance ? "doublePp" : "normal", next];
 }
 
-/** 空きマスがなくなったら、そこで出すのをやめる */
-function spawnHearts(rng: RngState, occupied: readonly Cell[], count: number, boardSize: number): [Cell[], RngState] {
-  if (count <= 0 || !hasFreeCell(occupied, boardSize)) return [[], rng];
-  const [heart, next] = spawnOnFreeCell(rng, occupied, boardSize);
-  const [rest, last] = spawnHearts(next, [...occupied, heart], count - 1, boardSize);
+/** 置けるマスがなくなったら、そこで出すのをやめる */
+function spawnHearts(
+  rng: RngState,
+  blocked: readonly Cell[],
+  body: readonly Cell[],
+  count: number,
+  boardSize: number,
+): [Cell[], RngState] {
+  if (count <= 0 || placeableCells(blocked, body, boardSize).length === 0) return [[], rng];
+  const [heart, next] = spawnCell(rng, blocked, body, boardSize);
+  const [rest, last] = spawnHearts(next, [...blocked, heart], body, count - 1, boardSize);
   return [[heart, ...rest], last];
 }
 
@@ -304,7 +329,7 @@ function obstacleAt({ stage, run }: Playing, cell: Cell): Obstacle | null {
 
 function collide(game: Playing, obstacle: Obstacle): StepResult {
   // 体はすり抜けられる。無敵時間中ならダメージもない
-  if (game.movement.invincibleMs > 0 && obstacle === "body") return { game: enter(game), events: [] };
+  if (game.movement.invincibleMs > 0 && obstacle === "body") return arrive(enter(game));
   if (game.movement.invincibleMs > 0) {
     const [direction, rng] = randomEscape(game);
     return {
@@ -332,7 +357,7 @@ function collide(game: Playing, obstacle: Obstacle): StepResult {
   if (obstacle === "body") {
     const entered = enter(game);
     const movement = { ...entered.movement, invincibleMs: run.tuning.config.invincibleMs };
-    return { game: { ...entered, run, movement }, events: [collided] };
+    return arrive({ ...entered, run, movement }, [collided]);
   }
   return {
     game: { ...game, run, movement: { ...game.movement, motion: stunned } },

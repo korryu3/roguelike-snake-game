@@ -14,20 +14,27 @@ const seeds =
     return seed;
   };
 
+/** タイトルを出て、同じシードのランを遊び始めるところ */
+const leftTitle = (seed: number, tuning: Tuning = DEFAULT_TUNING, newGame?: (seed: number, tuning: Tuning) => Game) => {
+  const session = createSession(seeds(seed, seed), tuning, newGame);
+  session.startNewRun();
+  return session;
+};
+
 describe("createSession", () => {
   test("最初はシードから始めたランの開始待ち", () => {
     expect(createSession(seeds(1)).store.getSnapshot()).toEqual(startRun(1));
   });
 
   test("方向を押して時間を進めると、ステージが始まる", () => {
-    const session = createSession(seeds(1), TEST_TUNING);
+    const session = leftTitle(1, TEST_TUNING);
     session.command({ kind: "direction", direction: "up" });
     session.advance(0);
     expect(session.store.getSnapshot()).toMatchObject({ phase: "playing", movement: { direction: "up" } });
   });
 
   test("押した方向は1回の進行でだけ使われる", () => {
-    const session = createSession(seeds(1), TEST_TUNING);
+    const session = leftTitle(1, TEST_TUNING);
     session.command({ kind: "direction", direction: "up" });
     session.advance(0);
     session.command({ kind: "direction", direction: "left" });
@@ -58,22 +65,20 @@ describe("createSession", () => {
   });
 
   describe("調整パネル", () => {
-    test("パネルを開くと、閉じるまで時間が進まず、方向の入力も受け付けない", () => {
-      const session = createSession(seeds(1));
+    test("パネルを開いているあいだは、時間が進まず、方向の入力も受け付けない", () => {
+      const session = leftTitle(1);
       session.command({ kind: "direction", direction: "up" });
       session.advance(0);
-      const playing = session.store.getSnapshot();
       session.command({ kind: "togglePanel" });
       expect(session.view.getSnapshot().panelOpen).toBe(true);
+      const paused = session.store.getSnapshot();
       session.command({ kind: "direction", direction: "left" });
       session.advance(1_000);
-      expect(session.store.getSnapshot()).toBe(playing);
+      expect(session.store.getSnapshot()).toBe(paused);
       session.command({ kind: "togglePanel" });
       expect(session.view.getSnapshot().panelOpen).toBe(false);
       session.advance(0);
-      const game = session.store.getSnapshot();
-      if (game.phase !== "playing") throw new Error(game.phase);
-      expect(game.movement.queuedInputs).toEqual([]);
+      expect(session.store.getSnapshot()).toBe(paused);
     });
 
     test("始め直すとパネルが閉じる", () => {
@@ -103,7 +108,7 @@ describe("createSession", () => {
 
   describe("設定メニュー", () => {
     const playingSession = () => {
-      const session = createSession(seeds(1), TEST_TUNING);
+      const session = leftTitle(1, TEST_TUNING);
       session.command({ kind: "direction", direction: "up" });
       session.advance(0);
       return session;
@@ -207,6 +212,37 @@ describe("createSession", () => {
     });
   });
 
+  describe("止める", () => {
+    test("タイトルにいるあいだは、方向キーも時間も受け付けない", () => {
+      const session = createSession(seeds(1), TEST_TUNING);
+      const before = session.store.getSnapshot();
+      session.command({ kind: "direction", direction: "up" });
+      session.advance(10_000);
+      expect(session.store.getSnapshot()).toBe(before);
+    });
+
+    test("ステージ中に調整パネルを開くと止まり、閉じても止まったまま", () => {
+      const session = createSession(seeds(1, 2), TEST_TUNING);
+      session.startNewRun();
+      session.command({ kind: "direction", direction: "up" });
+      session.advance(0);
+      session.command({ kind: "togglePanel" });
+      expect(session.store.getSnapshot().phase).toBe("paused");
+      session.command({ kind: "togglePanel" });
+      session.advance(1_000);
+      expect(session.store.getSnapshot().phase).toBe("paused");
+    });
+
+    test("pauseで、ステージ中のゲームが止まる", () => {
+      const session = createSession(seeds(1, 2), TEST_TUNING);
+      session.startNewRun();
+      session.command({ kind: "direction", direction: "up" });
+      session.advance(0);
+      session.pause();
+      expect(session.store.getSnapshot().phase).toBe("paused");
+    });
+  });
+
   describe("onChange", () => {
     const listen = (session: ReturnType<typeof createSession>) => {
       const changes: Change[] = [];
@@ -216,7 +252,7 @@ describe("createSession", () => {
 
     test("進めたときに、前の状態と次の状態とイベントを知らせる", () => {
       const prev = begin("right", { battery: { x: 8, y: 7 } });
-      const session = createSession(seeds(1), TEST_TUNING, () => prev);
+      const session = leftTitle(1, TEST_TUNING, () => prev);
       const changes = listen(session);
       session.advance(CONFIG.moveIntervalMs);
       expect(changes).toEqual([

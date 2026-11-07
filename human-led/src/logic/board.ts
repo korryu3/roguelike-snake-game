@@ -23,15 +23,28 @@ export const OPPOSITE: Record<Direction, Direction> = { up: "down", down: "up", 
 
 export const DIRECTIONS: readonly Direction[] = ["up", "down", "left", "right"];
 
-const freeCells = (occupied: readonly Cell[], boardSize: number) => {
-  const blocked = [...occupied, centerOf(boardSize)];
-  return Array.from({ length: boardSize ** 2 }, (_, i) => ({ x: i % boardSize, y: Math.floor(i / boardSize) })).filter(
-    (c) => !blocked.some((b) => sameCell(b, c)),
+const allCells = (boardSize: number): Cell[] =>
+  Array.from({ length: boardSize ** 2 }, (_, i) => ({ x: i % boardSize, y: Math.floor(i / boardSize) }));
+
+/**
+ * ものを置けるマス。壁、ほかのもの、体、中央のどれとも重ならない空きマスから選ぶ。
+ * 空きマスがなければ、頭を除く体のマスに置く。ものを取るのは頭だけなので、体の上に置いても取られない
+ */
+export function placeableCells(blocked: readonly Cell[], body: readonly Cell[], boardSize: number): Cell[] {
+  const taken = (c: Cell) => blocked.some((b) => sameCell(b, c));
+  const center = centerOf(boardSize);
+  const free = allCells(boardSize).filter(
+    (c) => !taken(c) && !body.some((b) => sameCell(b, c)) && !sameCell(c, center),
   );
-};
+  return free.length > 0 ? free : body.slice(1).filter((c) => !taken(c));
+}
 
-export const hasFreeCell = (occupied: readonly Cell[], boardSize: number) => freeCells(occupied, boardSize).length > 0;
-
-export function spawnOnFreeCell(rng: RngState, occupied: readonly Cell[], boardSize: number): [Cell, RngState] {
-  return pick(rng, freeCells(occupied, boardSize));
+/** blockedは、体を除く、ものを置けないマス（壁と、ほかのもの） */
+export function spawnCell(
+  rng: RngState,
+  blocked: readonly Cell[],
+  body: readonly Cell[],
+  boardSize: number,
+): [Cell, RngState] {
+  return pick(rng, placeableCells(blocked, body, boardSize));
 }

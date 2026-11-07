@@ -14,8 +14,11 @@ describe("commandOfKey", () => {
     );
   });
 
-  test("Tはパネルの開閉になる", () => {
+  test("Tは調整パネルの開閉になる", () => {
     expect(commandOfKey("KeyT")).toEqual({ kind: "togglePanel" });
+  });
+
+  test("Escは設定メニューの開閉になる", () => {
     expect(commandOfKey("Escape")).toEqual({ kind: "toggleMenu" });
   });
 

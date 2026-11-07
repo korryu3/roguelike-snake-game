@@ -33,6 +33,8 @@ export type Session = {
   /** 今のランと同じ数値で新しいランを始め、タイトルを出る */
   readonly startNewRun: () => void;
   readonly goToTitle: () => void;
+  /** ステージ中なら止める（タブを離れたとき）。方向キーで再開する */
+  readonly pause: () => void;
   /** 戻り値を呼ぶと、知らせるのをやめる */
   readonly onChange: (listener: (change: Change) => void) => () => void;
 };
@@ -63,14 +65,19 @@ export function createSession(
   const store = createStore(newRun(initialTuning));
   const view = createStore<View>(INITIAL_VIEW);
   const setView = (patch: Partial<View>) => view.set({ ...view.getSnapshot(), ...patch });
-  // 調整パネルか設定メニューが開いているあいだは、ゲームを進めない
-  const halted = () => view.getSnapshot().panelOpen || view.getSnapshot().menuOpen;
+  // タイトルにいるあいだと、調整パネルか設定メニューが開いているあいだは、ゲームを進めない
+  const halted = () => view.getSnapshot().onTitle || view.getSnapshot().panelOpen || view.getSnapshot().menuOpen;
   let pressed: Direction[] = [];
   const listeners = new Set<(change: Change) => void>();
   const commit = (next: Game, events: readonly GameEvent[]) => {
     const prev = store.getSnapshot();
     store.set(next);
     for (const listener of listeners) listener({ prev, next, events });
+  };
+  // 止めたら、方向キーを押すまで止まったまま（再開した直後にぶつかるのは理不尽なため）
+  const pauseGame = () => {
+    const { game, events } = pause(store.getSnapshot());
+    if (game !== store.getSnapshot()) commit(game, events);
   };
   const restart = (tuning: Tuning) => {
     commit(newRun(tuning), []);
@@ -80,14 +87,11 @@ export function createSession(
     store,
     view,
     command: (command) => {
-      if (command.kind === "togglePanel") return setView({ panelOpen: !view.getSnapshot().panelOpen });
-      if (command.kind === "toggleMenu") {
-        const opening = !view.getSnapshot().menuOpen;
-        setView({ menuOpen: opening });
-        if (opening) {
-          const { game, events } = pause(store.getSnapshot());
-          if (game !== store.getSnapshot()) commit(game, events);
-        }
+      if (command.kind === "togglePanel" || command.kind === "toggleMenu") {
+        const key = command.kind === "togglePanel" ? "panelOpen" : "menuOpen";
+        const opening = !view.getSnapshot()[key];
+        setView({ [key]: opening });
+        if (opening) pauseGame();
         return;
       }
       if (halted()) return;
@@ -110,6 +114,7 @@ export function createSession(
       setView({ onTitle: false });
     },
     goToTitle: () => setView({ onTitle: true }),
+    pause: pauseGame,
     onChange: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);

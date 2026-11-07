@@ -16,11 +16,16 @@ export function startLoop(session: Session): void {
     previous = null;
     frame = requestAnimationFrame(tick);
   };
-  const pause = () => {
+  const stop = () => {
     if (frame !== null) cancelAnimationFrame(frame);
     frame = null;
   };
-  const onVisibilityChange = () => (document.hidden ? pause() : resume());
+  const onVisibilityChange = () => {
+    if (!document.hidden) return resume();
+    // タブを離れたら一時停止にして、戻ったら方向キーで再開する
+    session.pause();
+    stop();
+  };
   const onKeyDown = (event: KeyboardEvent) => {
     const command = commandOfKey(event.code);
     if (command === null) return;
