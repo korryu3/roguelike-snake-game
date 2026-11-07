@@ -110,8 +110,12 @@ function drawSnake(ctx: Ctx, body: StageState["body"], movement: Movement | null
     const { x, y } = px(cell);
     const head = i === 0;
     ctx.fillStyle = stunned
-      ? head ? COLORS.stunnedHead : COLORS.stunnedBody
-      : head ? COLORS.snakeHead : COLORS.snakeBody;
+      ? head
+        ? COLORS.stunnedHead
+        : COLORS.stunnedBody
+      : head
+        ? COLORS.snakeHead
+        : COLORS.snakeBody;
     const inset = head ? 2 : 4;
     ctx.fillRect(x + inset, y + inset, CELL_PX - inset * 2, CELL_PX - inset * 2);
   });

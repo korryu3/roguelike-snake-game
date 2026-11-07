@@ -35,4 +35,5 @@ export function consumeOne(modules: readonly ModuleId[], id: ModuleId): readonly
 }
 
 /** ステージの開始時に使い切るモジュールを外す */
-export const consumeAtStageStart = (modules: readonly ModuleId[]) => modules.filter((m) => m !== "timeLimitBoostNextStage");
+export const consumeAtStageStart = (modules: readonly ModuleId[]) =>
+  modules.filter((m) => m !== "timeLimitBoostNextStage");

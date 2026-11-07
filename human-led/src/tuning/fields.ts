@@ -28,7 +28,11 @@ export const CONFIG_FIELDS: Readonly<Record<keyof Config, ConfigField>> = {
   rerollPrice: { label: "リロールの値段", group: "モジュールの画面", rule: count(0) },
   timeLimitPlusMs: { label: "制限時間延長（永続）の秒数（ms）", group: "モジュールの効果", rule: count(0) },
   timeLimitBoostMs: { label: "制限時間延長（次のステージ）の秒数（ms）", group: "モジュールの効果", rule: count(0) },
-  doublePpBatteryChancePerStack: { label: "PP2倍のバッテリーの確率（1個あたり）", group: "モジュールの効果", rule: PROBABILITY },
+  doublePpBatteryChancePerStack: {
+    label: "PP2倍のバッテリーの確率（1個あたり）",
+    group: "モジュールの効果",
+    rule: PROBABILITY,
+  },
 };
 
 export const MODULE_SPEC_FIELDS: Readonly<Record<keyof ModuleSpec, { readonly label: string; readonly rule: Rule }>> = {
@@ -47,7 +51,10 @@ export const FIELD_BY_PATH: ReadonlyMap<string, Field> = new Map<string, Field>(
   ...MODULE_IDS.flatMap((id) =>
     SPEC_KEYS.map((key): [string, Field] => [
       `modules.${id}.${key}`,
-      { label: `${MESSAGES.ja.modules[id].name}の${MODULE_SPEC_FIELDS[key].label}`, rule: MODULE_SPEC_FIELDS[key].rule },
+      {
+        label: `${MESSAGES.ja.modules[id].name}の${MODULE_SPEC_FIELDS[key].label}`,
+        rule: MODULE_SPEC_FIELDS[key].rule,
+      },
     ]),
   ),
 ]);

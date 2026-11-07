@@ -27,6 +27,9 @@ export type AudioPlayer = {
   readonly setVolumes: (volumes: Volumes) => void;
 };
 
+// 再生できなかったとき（自動再生の制限など）は、音なしで続ける
+const ignore = () => {};
+
 /** ブラウザの音の再生をまとめる。何を鳴らすかは決めない */
 export function createAudioPlayer(initialVolumes: Volumes): AudioPlayer {
   const sounds = Object.fromEntries(
@@ -44,9 +47,6 @@ export function createAudioPlayer(initialVolumes: Volumes): AudioPlayer {
     bgm.volume = bgmVolume(volumes, level);
   };
   applyBgmVolume();
-
-  // 再生できなかったとき（自動再生の制限など）は、音なしで続ける
-  const ignore = () => {};
 
   return {
     play: (sound) => {

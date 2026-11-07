@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CONFIG } from "../config";
 import { giveUp, revive, step } from "./game";
-import { begin, CENTER, stageOf, tick, ticks } from "./testing";
+import { begin, CENTER, stageOf, ticks } from "./testing";
 import type { Game, ModuleId } from "./types";
 
 /** 中央から右へ2マス進み、HP1で壁にぶつかって、生き返るモーダルになったところ */

@@ -131,7 +131,10 @@ describe("step: 体をすり抜ける", () => {
 describe("step: 動き出す方向の順番", () => {
   it("壁でも体でもない方向がなければ、体の方向のうち真後ろ以外へ動き出す", () => {
     // (8,7)→(8,8)→(7,8)→(6,8)→(6,7)と進み、上の壁にぶつかる。左は壁、右は体、下は首
-    const walls = [{ x: 6, y: 6 }, { x: 5, y: 7 }];
+    const walls = [
+      { x: 6, y: 6 },
+      { x: 5, y: 7 },
+    ];
     for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
       let game = tick(begin("right", { walls, length: 7 }, seed)).game;
       game = tick(game, ["down"]).game;
@@ -145,7 +148,11 @@ describe("step: 動き出す方向の順番", () => {
   });
 
   it("真後ろ以外がすべて壁なら、真後ろへ動き出す", () => {
-    const walls = [{ x: 9, y: 7 }, { x: 8, y: 6 }, { x: 8, y: 8 }];
+    const walls = [
+      { x: 9, y: 7 },
+      { x: 8, y: 6 },
+      { x: 8, y: 8 },
+    ];
     for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
       const hit = tick(tick(begin("right", { walls }, seed)).game).game;
       expect(movementOf(hit).motion.kind).toBe("stunned");
@@ -155,7 +162,13 @@ describe("step: 動き出す方向の順番", () => {
 
   it("無敵時間中に壁にぶつかったときも、同じ順で向きを変える", () => {
     // (8,7)で右の壁にぶつかり、上へ動き出す。(8,6)では上・左・右が壁で、下が首
-    const walls = [{ x: 9, y: 7 }, { x: 8, y: 8 }, { x: 8, y: 5 }, { x: 7, y: 6 }, { x: 9, y: 6 }];
+    const walls = [
+      { x: 9, y: 7 },
+      { x: 8, y: 8 },
+      { x: 8, y: 5 },
+      { x: 7, y: 6 },
+      { x: 9, y: 6 },
+    ];
     for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
       const hit = ticks(begin("right", { walls }, seed), 2).game;
       expect(movementOf(hit).motion.kind).toBe("stunned");

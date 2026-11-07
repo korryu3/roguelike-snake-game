@@ -5,7 +5,8 @@ import { begin, tick, TEST_TUNING } from "../logic/testing";
 import type { Game } from "../logic/types";
 import { bgmLevel, soundsFor } from "./cues";
 
-const sounds = (prev: Game, result: { game: Game; events: Parameters<typeof soundsFor>[2] }) => soundsFor(prev, result.game, result.events);
+const sounds = (prev: Game, result: { game: Game; events: Parameters<typeof soundsFor>[2] }) =>
+  soundsFor(prev, result.game, result.events);
 
 const AHEAD = { x: 8, y: 7 };
 
@@ -66,7 +67,8 @@ describe("soundsFor", () => {
 
 describe("bgmLevel", () => {
   it("ステージ中は元の音量", () => {
-    for (const phase of ["awaitingStart", "playing", "paused", "reviveChoice"] as const) expect(bgmLevel("stage", phase)).toBe("normal");
+    for (const phase of ["awaitingStart", "playing", "paused", "reviveChoice"] as const)
+      expect(bgmLevel("stage", phase)).toBe("normal");
   });
 
   it("クリアのモーダルとモジュールの画面とゲームオーバーでは下げる", () => {

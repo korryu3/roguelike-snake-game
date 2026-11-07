@@ -10,7 +10,10 @@ const eatAhead = (setup: RunSetup = {}, seed = 1) => tick(begin("right", { batte
 
 /** すぐ右のバッテリーを食べてから、その先のゴールに入る */
 const eatThenClear = (setup: RunSetup) => {
-  const { game } = ticks(begin("right", { battery: AHEAD, goal: { x: 9, y: 7 }, batteriesEaten: CONFIG.batteriesToGoal, ...setup }), 2);
+  const { game } = ticks(
+    begin("right", { battery: AHEAD, goal: { x: 9, y: 7 }, batteriesEaten: CONFIG.batteriesToGoal, ...setup }),
+    2,
+  );
   if (game.phase !== "cleared") throw new Error(`クリアの局面ではない: ${game.phase}`);
   return game.summary;
 };
@@ -23,7 +26,11 @@ const movementOf = (game: Game) => {
 describe("step: PP・伸び2倍", () => {
   it("持っていると、バッテリー1個でPPが2倍、長さが2伸びる", () => {
     const { game } = eatAhead({ modules: ["doublePpAndGrowth"] });
-    expect(game.run).toMatchObject({ pp: 2 * CONFIG.ppPerBattery, totalPp: 2 * CONFIG.ppPerBattery, length: CONFIG.initialLength + 2 });
+    expect(game.run).toMatchObject({
+      pp: 2 * CONFIG.ppPerBattery,
+      totalPp: 2 * CONFIG.ppPerBattery,
+      length: CONFIG.initialLength + 2,
+    });
     expect(stageOf(game).ppEarned).toBe(2 * CONFIG.ppPerBattery);
   });
 

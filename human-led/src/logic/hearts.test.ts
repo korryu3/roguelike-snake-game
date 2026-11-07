@@ -16,7 +16,10 @@ describe("step: ハートが出る", () => {
   it("累計獲得PPが基準を超えると、空きマスにハートが出る", () => {
     for (const seed of seeds.slice(0, 30)) {
       const goal = { x: 3, y: 3 };
-      const { game } = eatAhead({ walls: TOP_ROW_WALLS, goal, batteriesEaten: CONFIG.batteriesToGoal, totalPp: CONFIG.heartEveryTotalPp - 1 }, seed);
+      const { game } = eatAhead(
+        { walls: TOP_ROW_WALLS, goal, batteriesEaten: CONFIG.batteriesToGoal, totalPp: CONFIG.heartEveryTotalPp - 1 },
+        seed,
+      );
       const { hearts, body, battery } = stageOf(game);
       expect(hearts.length).toBeGreaterThanOrEqual(1);
       const occupied = [...TOP_ROW_WALLS, ...body, battery, goal, CENTER];
@@ -36,9 +39,10 @@ describe("step: ハートと重ならない", () => {
   it("次のバッテリーはハートと重ならず、置き場所がなければハートは出ない", () => {
     const lastFree = { x: 0, y: 0 };
     const reserved = [lastFree, AHEAD, CENTER];
-    const hearts: Cell[] = Array.from({ length: CONFIG.boardSize ** 2 }, (_, i) => ({ x: i % CONFIG.boardSize, y: Math.floor(i / CONFIG.boardSize) })).filter(
-      (c) => !reserved.some((r) => sameCell(r, c)),
-    );
+    const hearts: Cell[] = Array.from({ length: CONFIG.boardSize ** 2 }, (_, i) => ({
+      x: i % CONFIG.boardSize,
+      y: Math.floor(i / CONFIG.boardSize),
+    })).filter((c) => !reserved.some((r) => sameCell(r, c)));
     const { game } = eatAhead({ hearts, totalPp: CONFIG.heartEveryTotalPp - 1 });
     expect(stageOf(game).battery).toEqual(lastFree);
     expect(stageOf(game).hearts).toHaveLength(hearts.length);

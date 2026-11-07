@@ -60,7 +60,13 @@ export function App({ session, audio, tuningStorage, preferencesStorage, initial
     <main className="app" onClick={playButtonSound}>
       {screen === "title" && <TitleScreen t={t} onStart={session.startNewRun} onOpenSettings={toggleMenu} />}
       {screen === "gameOver" && game.phase === "gameOver" && (
-        <GameOverScreen game={game} t={t} onRetry={session.startNewRun} onTitle={session.goToTitle} onOpenSettings={toggleMenu} />
+        <GameOverScreen
+          game={game}
+          t={t}
+          onRetry={session.startNewRun}
+          onTitle={session.goToTitle}
+          onOpenSettings={toggleMenu}
+        />
       )}
       {screen === "stage" && <StageView game={game} t={t} session={session} onOpenSettings={toggleMenu} />}
       <p className="controls">{t.controls}</p>
@@ -75,13 +81,24 @@ export function App({ session, audio, tuningStorage, preferencesStorage, initial
         />
       )}
       {view.panelOpen && (
-        <TuningPanel draft={draft} running={game.run.tuning} saved={saved} onChange={changeDraft} onRestart={session.restart} />
+        <TuningPanel
+          draft={draft}
+          running={game.run.tuning}
+          saved={saved}
+          onChange={changeDraft}
+          onRestart={session.restart}
+        />
       )}
     </main>
   );
 }
 
-type StageProps = { readonly game: Game; readonly t: Messages; readonly session: Session; readonly onOpenSettings: () => void };
+type StageProps = {
+  readonly game: Game;
+  readonly t: Messages;
+  readonly session: Session;
+  readonly onOpenSettings: () => void;
+};
 
 function StageView({ game, t, session, onOpenSettings }: StageProps) {
   const { perform } = session;

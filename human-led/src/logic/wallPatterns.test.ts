@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { checkWallPattern, placeWallPattern } from "./wallPatterns";
 
-const FIVE = [
-  "#...#",
-  ".....",
-  ".....",
-  ".....",
-  "#...#",
-];
+const FIVE = ["#...#", ".....", ".....", ".....", "#...#"];
 
 describe("checkWallPattern", () => {
   it("#と.だけで、行の長さがそろい、中央の3×3が床なら問題なし", () => {
@@ -58,15 +52,7 @@ describe("placeWallPattern", () => {
   });
 
   it("盤面より大きいパターンは、はみ出した壁を捨てる", () => {
-    const pattern = [
-      "#.....#",
-      ".#.....",
-      ".......",
-      ".......",
-      ".......",
-      ".......",
-      ".......",
-    ];
+    const pattern = ["#.....#", ".#.....", ".......", ".......", ".......", ".......", "......."];
     expect(placeWallPattern(pattern, 5)).toEqual([{ x: 0, y: 0 }]);
   });
 });

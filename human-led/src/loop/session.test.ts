@@ -6,11 +6,13 @@ import { begin, cleared, TEST_TUNING, tick } from "../logic/testing";
 import type { Game, ModuleId } from "../logic/types";
 import { type Change, createSession } from "./session";
 
-const seeds = (...values: number[]) => () => {
-  const seed = values.shift();
-  if (seed === undefined) throw new Error("シードが足りない");
-  return seed;
-};
+const seeds =
+  (...values: number[]) =>
+  () => {
+    const seed = values.shift();
+    if (seed === undefined) throw new Error("シードが足りない");
+    return seed;
+  };
 
 describe("createSession", () => {
   test("最初はシードから始めたランの開始待ち", () => {
@@ -145,7 +147,8 @@ describe("createSession", () => {
   describe("画面の操作", () => {
     const sessionAt = (game: Game) => createSession(seeds(1), DEFAULT_TUNING, () => game);
     const shopWith = (pp: number) => openShop(cleared({ pp })).game;
-    const dying = (modules: readonly ModuleId[]) => tick(begin("right", { walls: [{ x: 8, y: 7 }], hp: 1, modules })).game;
+    const dying = (modules: readonly ModuleId[]) =>
+      tick(begin("right", { walls: [{ x: 8, y: 7 }], hp: 1, modules })).game;
 
     test("クリアの局面でモジュールの画面を開ける", () => {
       const session = sessionAt(cleared());
@@ -177,7 +180,10 @@ describe("createSession", () => {
     test("生き返るモーダルで、選んだモジュールで生き返る", () => {
       const session = sessionAt(dying(["revive", "reviveAtOneHp"]));
       session.perform({ kind: "revive", module: "reviveAtOneHp" });
-      expect(session.store.getSnapshot()).toMatchObject({ phase: "awaitingStart", run: { hp: 1, modules: ["revive"] } });
+      expect(session.store.getSnapshot()).toMatchObject({
+        phase: "awaitingStart",
+        run: { hp: 1, modules: ["revive"] },
+      });
     });
 
     test("生き返るモーダルで諦めると、ゲームオーバー", () => {
@@ -189,7 +195,12 @@ describe("createSession", () => {
     test("その局面でできない操作は何も変えない", () => {
       const session = sessionAt(startRun(1));
       const before = session.store.getSnapshot();
-      for (const action of [{ kind: "openShop" }, { kind: "buy", offerIndex: 0 }, { kind: "nextStage" }, { kind: "giveUp" }] as const) {
+      for (const action of [
+        { kind: "openShop" },
+        { kind: "buy", offerIndex: 0 },
+        { kind: "nextStage" },
+        { kind: "giveUp" },
+      ] as const) {
         session.perform(action);
       }
       expect(session.store.getSnapshot()).toBe(before);
@@ -208,7 +219,9 @@ describe("createSession", () => {
       const session = createSession(seeds(1), TEST_TUNING, () => prev);
       const changes = listen(session);
       session.advance(CONFIG.moveIntervalMs);
-      expect(changes).toEqual([{ prev, next: session.store.getSnapshot(), events: [{ type: "batteryEaten", at: { x: 8, y: 7 } }] }]);
+      expect(changes).toEqual([
+        { prev, next: session.store.getSnapshot(), events: [{ type: "batteryEaten", at: { x: 8, y: 7 } }] },
+      ]);
     });
 
     test("画面の操作でも知らせる", () => {

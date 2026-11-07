@@ -1,13 +1,16 @@
 {
   "name": "roguelike-snake-game",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check"
   },
   "dependencies": {
     "react": "^19.3.1",
@@ -17,6 +20,8 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.2.1",
+    "oxfmt": "0.77.0",
+    "oxlint": "1.92.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.6",
     "vite-plugin-singlefile": "^2.3.4",

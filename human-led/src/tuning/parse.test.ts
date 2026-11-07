@@ -5,7 +5,7 @@ import { parseTuningJson } from "./parse";
 const parsed = (value: unknown) => {
   const result = parseTuningJson(JSON.stringify(value));
   if (!result.ok) throw new Error(`読めるはず: ${result.reason}`);
-  return { ...result, issues: [...result.issues].sort((a, b) => a.path.localeCompare(b.path)) };
+  return { ...result, issues: result.issues.toSorted((a, b) => a.path.localeCompare(b.path)) };
 };
 
 describe("parseTuningJson", () => {
@@ -14,14 +14,20 @@ describe("parseTuningJson", () => {
   });
 
   test("項目の順番が違っても、読み込んだものを書き出すと既定値を書き出したものと同じ文字列になる", () => {
-    const reversed = { modules: DEFAULT_TUNING.modules, config: Object.fromEntries(Object.entries(DEFAULT_TUNING.config).reverse()) };
+    const reversed = {
+      modules: DEFAULT_TUNING.modules,
+      config: Object.fromEntries(Object.entries(DEFAULT_TUNING.config).toReversed()),
+    };
     expect(JSON.stringify(parsed(reversed).tuning)).toBe(JSON.stringify(DEFAULT_TUNING));
   });
 
   test("書かれていない項目は既定値になり、問題にしない", () => {
     const result = parsed({ config: { moveIntervalMs: 90 }, modules: { revive: { price: 1 } } });
     expect(result.tuning.config).toEqual({ ...DEFAULT_TUNING.config, moveIntervalMs: 90 });
-    expect(result.tuning.modules).toEqual({ ...DEFAULT_TUNING.modules, revive: { ...DEFAULT_TUNING.modules.revive, price: 1 } });
+    expect(result.tuning.modules).toEqual({
+      ...DEFAULT_TUNING.modules,
+      revive: { ...DEFAULT_TUNING.modules.revive, price: 1 },
+    });
     expect(parsed({}).tuning).toEqual(DEFAULT_TUNING);
     expect(result.issues).toEqual([]);
   });
@@ -62,7 +68,11 @@ describe("parseTuningJson", () => {
   });
 
   test("知らない項目は捨て、問題として返す", () => {
-    const result = parsed({ speed: 1, config: { moveIntervalMS: 90 }, modules: { teleport: { price: 1 }, revive: { color: "red" } } });
+    const result = parsed({
+      speed: 1,
+      config: { moveIntervalMS: 90 },
+      modules: { teleport: { price: 1 }, revive: { color: "red" } },
+    });
     expect(result.tuning).toEqual(DEFAULT_TUNING);
     expect(result.issues).toEqual([
       { path: "config.moveIntervalMS", kind: "unknown" },
@@ -86,7 +96,8 @@ describe("parseTuningJson", () => {
   });
 
   test("一番外がオブジェクトでなければ、読み込みの失敗として返す", () => {
-    for (const text of ["null", "[]", "3", '"x"']) expect(parseTuningJson(text)).toEqual({ ok: false, reason: "notObject" });
+    for (const text of ["null", "[]", "3", '"x"'])
+      expect(parseTuningJson(text)).toEqual({ ok: false, reason: "notObject" });
   });
 
   test("壁のパターンが書かれていなければ、既定のパターンになり、問題にしない", () => {
