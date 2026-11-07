@@ -20,12 +20,15 @@ export function TitleScreen({ t, onStart, onOpenSettings }: TitleProps) {
       <h1 className="m-0 text-6xl tracking-widest text-highlight [text-shadow:0_0_24px_rgb(14_165_233/0.6)]">
         {t.title}
       </h1>
-      <GameButton size="hero" autoFocus onClick={onStart}>
-        {t.startGame}
-      </GameButton>
-      <GameButton tone="normal" onClick={onOpenSettings}>
-        {TITLE_SETTINGS_LABEL}
-      </GameButton>
+      {/* 同じ大きさにそろえる。幅は長いほうの文字に合わせる */}
+      <div className="flex flex-col items-stretch gap-6">
+        <GameButton size="hero" autoFocus onClick={onStart}>
+          {t.startGame}
+        </GameButton>
+        <GameButton tone="normal" size="hero" onClick={onOpenSettings}>
+          {TITLE_SETTINGS_LABEL}
+        </GameButton>
+      </div>
     </section>
   );
 }
