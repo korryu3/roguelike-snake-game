@@ -30,10 +30,8 @@ export default defineConfig({
     rules: {
       "react/react-in-jsx-scope": "off",
       "import/no-unassigned-import": ["error", { allow: ["**/*.css"] }],
-      // 型を使うルール。型の整理（zod）で直すときに戻す
-      "typescript/no-unsafe-type-assertion": "off",
+      // 種類を書き尽くしたswitchを誤って検出する。returnの書き忘れは、tsconfigのnoImplicitReturnsで検出する
       "typescript/consistent-return": "off",
-      "typescript/no-misused-spread": "off",
     },
     overrides: [
       forbidLayers(

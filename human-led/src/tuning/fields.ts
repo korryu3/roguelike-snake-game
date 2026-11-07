@@ -1,5 +1,6 @@
 import { type Config, DEFAULT_TUNING, MODULE_IDS, type ModuleSpec } from "../config";
 import { MESSAGES } from "../i18n/messages";
+import { keysOf } from "../lib/records";
 
 export type Rule = { readonly min: number; readonly max: number; readonly integer: boolean };
 
@@ -40,8 +41,8 @@ export const MODULE_SPEC_FIELDS: Readonly<Record<keyof ModuleSpec, { readonly la
   maxStack: { label: "上限", rule: count(0) },
 };
 
-export const CONFIG_KEYS = Object.keys(DEFAULT_TUNING.config) as readonly (keyof Config)[];
-export const SPEC_KEYS = Object.keys(MODULE_SPEC_FIELDS) as readonly (keyof ModuleSpec)[];
+export const CONFIG_KEYS: readonly (keyof Config)[] = keysOf(DEFAULT_TUNING.config);
+export const SPEC_KEYS: readonly (keyof ModuleSpec)[] = keysOf(MODULE_SPEC_FIELDS);
 
 /** JSONの中の位置（`config.moveIntervalMs`、`modules.revive.price`）から、項目の名前と決まりを引く */
 type Field = { readonly label: string; readonly rule: Rule };

@@ -1,5 +1,6 @@
 import type { SpriteImages } from "./draw";
-import { spriteUrls, type SpriteUrls } from "./sprites";
+import { keysOf } from "../lib/records";
+import { type SpriteKey, spriteUrls, type SpriteUrls } from "./sprites";
 
 /*
  * 置いてある画像だけを読み込む。まだない画像（ゴールなど）は一覧に入らず、図形や文字で代わりに出す。
@@ -16,17 +17,18 @@ export type Sprites = { readonly urls: SpriteUrls; readonly images: SpriteImages
 /** 画像をデコードし終えてから返す。読み込めない画像は、ないものとして扱う */
 export async function loadSprites(): Promise<Sprites> {
   const urls = spriteUrls(FOUND);
-  const loaded = await Promise.all(
-    Object.entries(urls).map(async ([key, url]) => {
+  const images: Partial<Record<SpriteKey, HTMLImageElement>> = {};
+  await Promise.all(
+    keysOf(urls).map(async (key) => {
       const image = new Image();
-      image.src = url;
+      image.src = urls[key] ?? "";
       try {
         await image.decode();
-        return [[key, image]];
+        images[key] = image;
       } catch {
-        return [];
+        // 読み込めない画像は、ないものとして図形で描く
       }
     }),
   );
-  return { urls, images: Object.fromEntries(loaded.flat()) as SpriteImages };
+  return { urls, images };
 }

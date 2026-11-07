@@ -1,3 +1,4 @@
+import { keysOf, recordOf } from "../lib/records";
 export const CELL_PX = 32;
 export const boardPx = (boardSize: number) => CELL_PX * boardSize;
 export const BLINK_INTERVAL_MS = 100;
@@ -24,11 +25,9 @@ const CSS_VARIABLES = {
 
 export type BoardColors = Readonly<Record<keyof typeof CSS_VARIABLES, string>>;
 
-export const BOARD_COLOR_KEYS = Object.keys(CSS_VARIABLES) as readonly (keyof BoardColors)[];
+export const BOARD_COLOR_KEYS: readonly (keyof BoardColors)[] = keysOf(CSS_VARIABLES);
 
 /** 色はテーマに1か所だけ書き、ここではCSS変数の名前から読む */
 export function readBoardColors(readCssVariable: (name: string) => string): BoardColors {
-  return Object.fromEntries(
-    BOARD_COLOR_KEYS.map((key) => [key, readCssVariable(CSS_VARIABLES[key]).trim()]),
-  ) as BoardColors;
+  return recordOf(BOARD_COLOR_KEYS, (key) => readCssVariable(CSS_VARIABLES[key]).trim());
 }

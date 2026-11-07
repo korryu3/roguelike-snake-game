@@ -1,4 +1,5 @@
 import type { ModuleId, WallPattern } from "./logic/types";
+import { keysOf } from "./lib/records";
 
 export const CONFIG = {
   boardSize: 19,
@@ -57,7 +58,7 @@ export const MODULES: Record<ModuleId, ModuleSpec> = {
   doublePpBattery: { price: 5, maxStack: 3 },
 };
 
-export const MODULE_IDS = Object.keys(MODULES) as readonly ModuleId[];
+export const MODULE_IDS: readonly ModuleId[] = keysOf(MODULES);
 
 // prettier-ignore
 export const WALL_PATTERNS: readonly WallPattern[] = [
