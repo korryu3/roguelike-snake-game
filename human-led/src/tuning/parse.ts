@@ -1,30 +1,67 @@
-import { DEFAULT_TUNING, MODULE_IDS, type Config, type ModuleSpec, type Tuning } from "../config";
-import type { ModuleId, WallPattern } from "../logic/types";
+import { z } from "zod";
+import { DEFAULT_TUNING, MODULE_IDS, type Tuning } from "../config";
+import { recordOf } from "../lib/records";
+import type { WallPattern } from "../logic/types";
 import { checkWallPattern } from "../logic/wallPatterns";
 import { CONFIG_FIELDS, CONFIG_KEYS, MODULE_SPEC_FIELDS, type Rule, SPEC_KEYS } from "./fields";
 
-/** unknownは知らない項目で捨てた、invalidは使えない値で既定値に戻した */
+/** 読み込めなかった理由。pathはJSONの中の位置（`config.boardSize`、`wallPatterns.2`）で、一番外は"" */
 export type TuningIssue = { readonly path: string; readonly kind: "unknown" | "invalid" };
 
+/** 書かれていない項目は既定値で埋める。使えない値か知らない項目が1つでもあれば、全体を読み込まない */
 export type ParseResult =
-  | { readonly ok: true; readonly tuning: Tuning; readonly issues: readonly TuningIssue[] }
-  | { readonly ok: false; readonly reason: "notJson" | "notObject" };
+  | { readonly ok: true; readonly tuning: Tuning }
+  | { readonly ok: false; readonly reason: "notJson" }
+  | { readonly ok: false; readonly reason: "invalid"; readonly issues: readonly TuningIssue[] };
 
-type Json = Readonly<Record<string, unknown>>;
+const numberOf = (rule: Rule) => {
+  const ranged = z.number().min(rule.min).max(rule.max);
+  return rule.integer ? ranged.int() : ranged;
+};
 
-const isObject = (value: unknown): value is Json =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+/** 調整パネルの入力欄も、同じ決まりで検査する */
+export const satisfies = (rule: Rule, value: unknown): value is number => numberOf(rule).safeParse(value).success;
 
-export const satisfies = (rule: Rule, value: unknown): value is number =>
-  typeof value === "number" &&
-  Number.isFinite(value) &&
-  value >= rule.min &&
-  value <= rule.max &&
-  (!rule.integer || Number.isInteger(value));
+const isPattern = (value: unknown): value is WallPattern =>
+  Array.isArray(value) && value.every((row) => typeof row === "string") && checkWallPattern(value) === null;
 
-const join = (prefix: string, key: string) => (prefix ? `${prefix}.${key}` : key);
+const tuningSchema = z.strictObject({
+  config: z
+    .strictObject(recordOf(CONFIG_KEYS, (key) => numberOf(CONFIG_FIELDS[key].rule).default(DEFAULT_TUNING.config[key])))
+    .default(DEFAULT_TUNING.config),
+  modules: z
+    .strictObject(
+      recordOf(MODULE_IDS, (id) =>
+        z
+          .strictObject(
+            recordOf(SPEC_KEYS, (key) =>
+              numberOf(MODULE_SPEC_FIELDS[key].rule).default(DEFAULT_TUNING.modules[id][key]),
+            ),
+          )
+          .default(DEFAULT_TUNING.modules[id]),
+      ),
+    )
+    .default(DEFAULT_TUNING.modules),
+  wallPatterns: z
+    .array(z.custom<WallPattern>(isPattern))
+    .min(1)
+    .default(() => [...DEFAULT_TUNING.wallPatterns]),
+});
 
-/** 外から来た文字列を、既定値の形に合わせて検査する。足りない項目は既定値で埋める */
+const pathOf = (path: readonly PropertyKey[]) => path.map(String).join(".");
+
+/** zodの問題を、JSONの中の位置ごとの問題にする。知らない項目は、項目ごとに分ける */
+function issuesOf(error: z.ZodError): TuningIssue[] {
+  const issues = error.issues.flatMap((issue): TuningIssue[] =>
+    issue.code === "unrecognized_keys"
+      ? issue.keys.map((key) => ({ path: pathOf([...issue.path, key]), kind: "unknown" }))
+      : [{ path: pathOf(issue.path), kind: "invalid" }],
+  );
+  // 1つの値が、いくつもの決まりに引っかかることがある
+  return issues.filter((a, i) => issues.findIndex((b) => b.path === a.path && b.kind === a.kind) === i);
+}
+
+/** 外から来た文字列を、既定値の形に合わせて検査する */
 export function parseTuningJson(text: string): ParseResult {
   let input: unknown;
   try {
@@ -32,67 +69,8 @@ export function parseTuningJson(text: string): ParseResult {
   } catch {
     return { ok: false, reason: "notJson" };
   }
-  if (!isObject(input)) return { ok: false, reason: "notObject" };
-  const issues: TuningIssue[] = [];
-
-  const section = (path: string, given: unknown, known: readonly string[]): Json => {
-    if (given === undefined) return {};
-    if (!isObject(given)) {
-      issues.push({ path, kind: "invalid" });
-      return {};
-    }
-    for (const key of Object.keys(given))
-      if (!known.includes(key)) issues.push({ path: join(path, key), kind: "unknown" });
-    return given;
-  };
-  const value = (path: string, rule: Rule, given: unknown, fallback: number): number => {
-    if (given === undefined) return fallback;
-    if (satisfies(rule, given)) return given;
-    issues.push({ path, kind: "invalid" });
-    return fallback;
-  };
-
-  const root = section("", input, ["config", "modules", "wallPatterns"]);
-  const config = section("config", root.config, CONFIG_KEYS);
-  const modules = section("modules", root.modules, MODULE_IDS);
-  const specOf = (id: ModuleId): ModuleSpec => {
-    const given = section(`modules.${id}`, modules[id], SPEC_KEYS);
-    const fallback = DEFAULT_TUNING.modules[id];
-    return Object.fromEntries(
-      SPEC_KEYS.map((key) => [
-        key,
-        value(`modules.${id}.${key}`, MODULE_SPEC_FIELDS[key].rule, given[key], fallback[key]),
-      ]),
-    ) as ModuleSpec;
-  };
-  const tuning: Tuning = {
-    config: Object.fromEntries(
-      CONFIG_KEYS.map((key) => [
-        key,
-        value(`config.${key}`, CONFIG_FIELDS[key].rule, config[key], DEFAULT_TUNING.config[key]),
-      ]),
-    ) as Config,
-    modules: Object.fromEntries(MODULE_IDS.map((id) => [id, specOf(id)])) as Tuning["modules"],
-    wallPatterns: wallPatternsOf(root.wallPatterns, issues),
-  };
-  return { ok: true, tuning, issues };
-}
-
-const isPattern = (value: unknown): value is WallPattern =>
-  Array.isArray(value) && value.every((row) => typeof row === "string") && checkWallPattern(value) === null;
-
-/** 使えないパターンは捨てる。1つも残らなければ既定のパターンにする */
-function wallPatternsOf(given: unknown, issues: TuningIssue[]): readonly WallPattern[] {
-  if (given === undefined) return DEFAULT_TUNING.wallPatterns;
-  const fallback = () => {
-    issues.push({ path: "wallPatterns", kind: "invalid" });
-    return DEFAULT_TUNING.wallPatterns;
-  };
-  if (!Array.isArray(given)) return fallback();
-  const usable = given.filter((pattern, i) => {
-    if (isPattern(pattern)) return true;
-    issues.push({ path: `wallPatterns.${i}`, kind: "invalid" });
-    return false;
-  });
-  return usable.length > 0 ? usable : fallback();
+  const result = tuningSchema.safeParse(input);
+  return result.success
+    ? { ok: true, tuning: result.data }
+    : { ok: false, reason: "invalid", issues: issuesOf(result.error) };
 }

@@ -1,3 +1,4 @@
+import { keysOf } from "../lib/records";
 import type { Cell, Direction } from "../logic/types";
 
 /** 素材の画像の名前。画像のファイルがまだないものは、図形や文字で代わりに出す */
@@ -37,7 +38,7 @@ export type SpriteUrls = Readonly<Partial<Record<SpriteKey, string>>>;
 export function spriteUrls(found: Readonly<Record<string, string>>): SpriteUrls {
   const byFile = new Map(Object.entries(found).map(([path, url]) => [path.split("/").at(-1), url]));
   return Object.fromEntries(
-    (Object.keys(SPRITE_FILES) as SpriteKey[]).flatMap((key) => {
+    keysOf(SPRITE_FILES).flatMap((key) => {
       const url = byFile.get(SPRITE_FILES[key]);
       return url === undefined ? [] : [[key, url]];
     }),

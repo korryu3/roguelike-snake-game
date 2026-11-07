@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vite-plus/test";
-import { CONFIG, MODULES } from "../config";
+import { CONFIG, MODULE_IDS, MODULES } from "../config";
 import { buyModule, openShop, reroll } from "./shop";
 import { begin, cleared, offersOf } from "./testing";
 import type { Game, ModuleId, RunSetup, StepResult } from "./types";
 
-const ALL_MODULES = Object.keys(MODULES) as ModuleId[];
+const ALL_MODULES = MODULE_IDS;
 const seeds = Array.from({ length: 30 }, (_, i) => i + 1);
 
 /** onlyの3つ以外を上限まで持たせて、候補をその3つにする */

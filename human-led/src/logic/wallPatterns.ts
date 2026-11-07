@@ -10,7 +10,7 @@ export function checkWallPattern(pattern: WallPattern): WallPatternIssue | null 
   const cx = Math.floor(pattern[0]!.length / 2);
   const cy = Math.floor(pattern.length / 2);
   const blocked = pattern.some((row, y) =>
-    [...row].some((ch, x) => ch === "#" && Math.abs(x - cx) <= 1 && Math.abs(y - cy) <= 1),
+    row.split("").some((ch, x) => ch === "#" && Math.abs(x - cx) <= 1 && Math.abs(y - cy) <= 1),
   );
   return blocked ? "blocksCenter" : null;
 }
@@ -21,6 +21,6 @@ export function placeWallPattern(pattern: WallPattern, boardSize: number): Cell[
   const dx = center.x - Math.floor((pattern[0]?.length ?? 0) / 2);
   const dy = center.y - Math.floor(pattern.length / 2);
   return pattern
-    .flatMap((row, y) => [...row].flatMap((ch, x) => (ch === "#" ? [{ x: x + dx, y: y + dy }] : [])))
+    .flatMap((row, y) => row.split("").flatMap((ch, x) => (ch === "#" ? [{ x: x + dx, y: y + dy }] : [])))
     .filter((c) => insideBoard(c, boardSize));
 }

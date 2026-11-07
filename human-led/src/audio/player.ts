@@ -2,6 +2,7 @@ import bgmUrl from "../assets/sounds/bgm.mp3";
 import buttonUrl from "../assets/sounds/button.mp3";
 import clearUrl from "../assets/sounds/clear.mp3";
 import gameOverUrl from "../assets/sounds/game-over.mp3";
+import { keysOf, recordOf } from "../lib/records";
 import goalUrl from "../assets/sounds/goal.mp3";
 import damageUrl from "../assets/sounds/hit.mp3";
 import pickupUrl from "../assets/sounds/pickup.mp3";
@@ -32,13 +33,11 @@ const ignore = () => {};
 
 /** ブラウザの音の再生をまとめる。何を鳴らすかは決めない */
 export function createAudioPlayer(initialVolumes: Volumes): AudioPlayer {
-  const sounds = Object.fromEntries(
-    Object.entries(SOUND_URLS).map(([id, url]) => {
-      const audio = new Audio(url);
-      audio.preload = "auto";
-      return [id, audio];
-    }),
-  ) as Record<SoundId, HTMLAudioElement>;
+  const sounds = recordOf(keysOf(SOUND_URLS), (id) => {
+    const audio = new Audio(SOUND_URLS[id]);
+    audio.preload = "auto";
+    return audio;
+  });
   const bgm = new Audio(bgmUrl);
   bgm.loop = true;
   let volumes = initialVolumes;
@@ -52,7 +51,8 @@ export function createAudioPlayer(initialVolumes: Volumes): AudioPlayer {
     play: (sound) => {
       if (volumes.sfx === 0) return;
       // 同じ音が続けて鳴っても重ねられるように、毎回複製して鳴らす
-      const audio = sounds[sound].cloneNode() as HTMLAudioElement;
+      const audio = sounds[sound].cloneNode();
+      if (!(audio instanceof HTMLAudioElement)) return;
       audio.volume = volumes.sfx;
       audio.play().catch(ignore);
     },
