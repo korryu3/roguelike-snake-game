@@ -1,4 +1,5 @@
-import { DEFAULT_VOLUMES, parseVolumes, type Volumes } from "../audio/volume";
+import { z } from "zod";
+import { DEFAULT_VOLUMES, type Volumes, volumesSchema } from "../audio/volume";
 import { LANGS, type Lang } from "../i18n/lang";
 
 /** プレイヤーが設定メニューで選ぶもの。ゲームの数値（調整パネル）とは別に保存する */
@@ -7,6 +8,11 @@ export type Preferences = { readonly lang: Lang; readonly volumes: Volumes };
 export const DEFAULT_PREFERENCES: Preferences = { lang: "ja", volumes: DEFAULT_VOLUMES };
 
 const KEY = "logsune.preferences";
+
+/** 書き込むのはこのアプリだけで、人が直す機会がないので、使えない値はその項目だけ既定にする */
+const preferencesSchema = z
+  .object({ lang: z.enum(LANGS).catch(DEFAULT_PREFERENCES.lang), volumes: volumesSchema })
+  .catch(DEFAULT_PREFERENCES);
 
 type KeyValue = Pick<Storage, "getItem" | "setItem">;
 
@@ -21,9 +27,7 @@ export function createPreferencesStorage(getStorage: () => KeyValue): Preference
     load: () => {
       try {
         const saved: unknown = JSON.parse(getStorage().getItem(KEY) ?? "{}");
-        const given = isRecord(saved) ? saved : {};
-        const lang = LANGS.find((l) => l === given.lang) ?? DEFAULT_PREFERENCES.lang;
-        return { lang, volumes: parseVolumes(given.volumes) };
+        return preferencesSchema.parse(saved);
       } catch {
         return DEFAULT_PREFERENCES;
       }
@@ -37,5 +41,3 @@ export function createPreferencesStorage(getStorage: () => KeyValue): Preference
     },
   };
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;

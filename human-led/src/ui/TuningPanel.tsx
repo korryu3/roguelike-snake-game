@@ -82,11 +82,13 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
   };
   const importJson = () => {
     const result = parseTuningJson(jsonText);
-    if (!result.ok) {
-      setMessages([result.reason === "notJson" ? "JSONとして読めない" : "一番外が { } のオブジェクトではない"]);
+    if (result.ok) {
+      replace(result.tuning, ["読み込んだ"]);
       return;
     }
-    replace(result.tuning, ["読み込んだ", ...result.issues.map(describeIssue)]);
+    // 読み込めなければ、今の調整は変えない
+    const reasons = result.reason === "notJson" ? ["JSONとして読めない"] : result.issues.map(describeIssue);
+    setMessages(["読み込めなかった（今の調整は変えていない）", ...reasons]);
   };
 
   return (
@@ -292,12 +294,11 @@ function describeRule(rule: Rule): string {
 }
 
 function describeIssue(issue: TuningIssue): string {
-  if (issue.kind === "unknown") return `知らない項目なので無視した: ${issue.path}`;
-  if (issue.path === "wallPatterns") return "使える壁のパターンがないので既定のパターンにした";
+  if (issue.kind === "unknown") return `知らない項目: ${issue.path}`;
+  if (issue.path === "") return "一番外が { } のオブジェクトではない";
+  if (issue.path === "wallPatterns") return "壁のパターンは、1つ以上のパターンの配列にする";
   const pattern = /^wallPatterns\.(\d+)$/.exec(issue.path);
-  if (pattern) return `${Number(pattern[1]) + 1}番目の壁のパターンは使えないので捨てた`;
+  if (pattern) return `${Number(pattern[1]) + 1}番目の壁のパターンが使えない`;
   const field = FIELD_BY_PATH.get(issue.path);
-  return field
-    ? `${field.label}は使えない値なので既定値にした（${describeRule(field.rule)}）`
-    : `${issue.path}は使えない値なので既定値にした`;
+  return field ? `${field.label}: ${describeRule(field.rule)}` : `${issue.path}: { } のオブジェクトにする`;
 }
