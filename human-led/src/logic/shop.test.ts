@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { CONFIG, MODULES } from "../config";
 import { buyModule, openShop, reroll } from "./shop";
 import { begin, cleared, offersOf } from "./testing";

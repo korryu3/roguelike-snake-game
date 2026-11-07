@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { CONFIG, DEFAULT_TUNING, type Tuning } from "../config";
 import { startRun } from "../logic/game";
 import { openShop } from "../logic/shop";

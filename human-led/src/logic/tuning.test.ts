@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { DEFAULT_TUNING, type Config, type ModuleSpec, type Tuning } from "../config";
 import { nextStage, startRun, step } from "./game";
 import { buyModule, openShop } from "./shop";

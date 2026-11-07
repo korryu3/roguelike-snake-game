@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { CONFIG, MODULES } from "../config";
 import { nextStage, step } from "./game";
 import { buyModule, openShop } from "./shop";

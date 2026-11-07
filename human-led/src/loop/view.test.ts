@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { pause, startRun } from "../logic/game";
 import { begin, cleared, tick } from "../logic/testing";
 import { INITIAL_VIEW, menuReturnsToStage, screenOf } from "./view";

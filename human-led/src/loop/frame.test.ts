@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { frameElapsedMs, MAX_FRAME_MS } from "./frame";
 
 describe("frameElapsedMs", () => {

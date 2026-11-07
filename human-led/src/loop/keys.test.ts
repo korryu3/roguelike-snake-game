@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { commandOfKey, isTypingTarget } from "./keys";
 
 const direction = (d: string) => ({ kind: "direction", direction: d });
