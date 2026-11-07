@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { CONFIG } from "../config";
 import { begin } from "../logic/testing";
 import { createSession } from "../loop/session";

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { CONFIG, DEFAULT_TUNING, type Tuning } from "../config";
 import { centerOf } from "./board";
 import { startRun } from "./game";

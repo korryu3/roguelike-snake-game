@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { BOARD_COLOR_KEYS, readBoardColors } from "./style";
 
 describe("readBoardColors", () => {

@@ -20,20 +20,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # nodeとpnpmの版は、リポジトリ直下のmise.tomlで決める
-      - uses: jdx/mise-action@v5
-
-      - name: Install
-        working-directory: human-led
-        run: pnpm install --frozen-lockfile
+      # node、pnpm、Vite+の版はhuman-ledのpackage.jsonで決める。依存も入れる
+      - uses: voidzero-dev/setup-vp@v1.22.0
+        with:
+          working-directory: human-led
+          version-file: package.json
+          node-version-file: package.json
 
       - name: Test
         working-directory: human-led
-        run: pnpm test
+        run: vp test run
 
       - name: Build
         working-directory: human-led
-        run: pnpm run build
+        run: vp build
 
       - name: Test ai-only
         working-directory: ai-only

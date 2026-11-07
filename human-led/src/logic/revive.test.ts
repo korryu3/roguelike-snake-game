@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { CONFIG } from "../config";
 import { giveUp, revive, step } from "./game";
 import { begin, CENTER, stageOf, ticks } from "./testing";
