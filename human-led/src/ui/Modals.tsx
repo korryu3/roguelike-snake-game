@@ -59,7 +59,6 @@ export function ShopModal({ game, t, perform }: Props<"shop">) {
             <p className="m-0 font-bold text-gold">{t.shop.price(offer.price)}</p>
             <GameButton
               tone="normal"
-
               disabled={!offer.affordable}
               onClick={() => perform({ kind: "buy", offerIndex: offer.offerIndex })}
             >
@@ -69,12 +68,7 @@ export function ShopModal({ game, t, perform }: Props<"shop">) {
         ))}
       </ul>
       <Actions>
-        <GameButton
-          tone="normal"
-
-          disabled={game.run.pp < rerollPrice}
-          onClick={() => perform({ kind: "reroll" })}
-        >
+        <GameButton tone="normal" disabled={game.run.pp < rerollPrice} onClick={() => perform({ kind: "reroll" })}>
           {t.shop.reroll(rerollPrice)}
         </GameButton>
         <GameButton autoFocus onClick={() => perform({ kind: "nextStage" })}>
@@ -94,7 +88,6 @@ export function ReviveModal({ game, t, perform }: Props<"reviveChoice">) {
           <li key={option.module}>
             <GameButton
               tone="normal"
-
               className="w-full justify-between"
               data-silent
               onClick={() => perform({ kind: "revive", module: option.module })}

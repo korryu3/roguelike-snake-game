@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import type { Game } from "../logic/types";
 import { drawGame } from "../render/draw";
 import { boardPx, readBoardColors } from "../render/style";
+import { boardWidth } from "./layout";
 import { useSprites } from "./sprites";
 
 export function Board({ game }: { game: Game }) {
@@ -24,6 +25,13 @@ export function Board({ game }: { game: Game }) {
   }, [game, dpr, colors, images]);
 
   return (
-    <canvas ref={ref} width={size * dpr} height={size * dpr} className="block" style={{ width: size, height: size }} />
+    // 描くときの大きさは変えず、表示だけを画面に合わせて縮める
+    <canvas
+      ref={ref}
+      width={size * dpr}
+      height={size * dpr}
+      className="block"
+      style={{ width: boardWidth(game.run.tuning.config.boardSize), aspectRatio: "1" }}
+    />
   );
 }

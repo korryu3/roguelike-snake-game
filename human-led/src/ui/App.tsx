@@ -9,13 +9,13 @@ import type { Game } from "../logic/types";
 import type { Session } from "../loop/session";
 import { menuReturnsToStage, screenOf } from "../loop/view";
 import type { Preferences, PreferencesStorage } from "../preferences/storage";
-import { boardPx } from "../render/style";
 import type { TuningStorage } from "../tuning/storage";
 import { Board } from "./Board";
 import { Hud } from "./Hud";
 import { ClearModal, ReviveModal, ShopModal } from "./Modals";
 import { GameOverScreen, TitleScreen } from "./Screens";
 import { SettingsMenu } from "./SettingsMenu";
+import { hudWidth } from "./layout";
 import { TuningPanel } from "./TuningPanel";
 
 type Props = {
@@ -104,10 +104,7 @@ function StageView({ game, t, session, onOpenSettings }: StageProps) {
   return (
     <>
       {/* 盤面と同じ幅の列の右上、時間制限の真上に置く */}
-      <div
-        className="flex max-w-[calc(100vw-2rem)] justify-end"
-        style={{ width: boardPx(game.run.tuning.config.boardSize) }}
-      >
+      <div className="flex justify-end" style={{ width: hudWidth(game.run.tuning.config.boardSize) }}>
         <Button variant="secondary" size="sm" onClick={onOpenSettings}>
           {t.settings.open}
         </Button>
