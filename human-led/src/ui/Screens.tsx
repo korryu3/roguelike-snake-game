@@ -35,10 +35,10 @@ type GameOverProps = {
   readonly t: Messages;
   readonly onRetry: () => void;
   readonly onTitle: () => void;
-  readonly onOpenSettings: () => void;
 };
 
-export function GameOverScreen({ game, t, onRetry, onTitle, onOpenSettings }: GameOverProps) {
+/** 設定は、モジュール選択などと同じく、Escで開く */
+export function GameOverScreen({ game, t, onRetry, onTitle }: GameOverProps) {
   const { run } = game;
   const g = t.gameOver;
   return (
@@ -65,9 +65,6 @@ export function GameOverScreen({ game, t, onRetry, onTitle, onOpenSettings }: Ga
           {g.retry}
         </GameButton>
       </div>
-      <GameButton tone="normal" onClick={onOpenSettings}>
-        {t.settings.openOutsideStage}
-      </GameButton>
     </section>
   );
 }

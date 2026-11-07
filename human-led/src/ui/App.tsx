@@ -63,13 +63,7 @@ export function App({ session, audio, tuningStorage, preferencesStorage, initial
       <main className="flex min-h-screen flex-col items-center justify-center gap-3" onClick={playButtonSound}>
         {screen === "title" && <TitleScreen t={t} onStart={session.startNewRun} onOpenSettings={toggleMenu} />}
         {screen === "gameOver" && game.phase === "gameOver" && (
-          <GameOverScreen
-            game={game}
-            t={t}
-            onRetry={session.startNewRun}
-            onTitle={session.goToTitle}
-            onOpenSettings={toggleMenu}
-          />
+          <GameOverScreen game={game} t={t} onRetry={session.startNewRun} onTitle={session.goToTitle} />
         )}
         {screen === "stage" && <StageView game={game} t={t} session={session} onOpenSettings={toggleMenu} />}
         <p className="fixed right-4 bottom-3 m-0 text-sm text-muted-foreground">{t.controls}</p>

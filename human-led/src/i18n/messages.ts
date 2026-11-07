@@ -19,8 +19,6 @@ export type Messages = {
     readonly close: string;
     readonly bgm: string;
     readonly sfx: string;
-    /** ステージ以外の画面に置くボタン。止めるものがないので⏸ではなく⚙にする */
-    readonly openOutsideStage: string;
   };
   readonly hud: {
     readonly stage: (stageNumber: number) => string;
@@ -90,7 +88,6 @@ const ja: Messages = {
     close: "閉じる",
     bgm: "BGM",
     sfx: "効果音",
-    openOutsideStage: "⚙ 設定",
   },
   hud: {
     stage: (n) => `ステージ ${n}`,
@@ -177,7 +174,6 @@ const en: Messages = {
     close: "Close",
     bgm: "Music",
     sfx: "Sound effects",
-    openOutsideStage: "⚙ Settings",
   },
   hud: {
     stage: (n) => `Stage ${n}`,
