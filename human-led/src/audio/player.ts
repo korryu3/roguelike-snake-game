@@ -3,7 +3,7 @@ import buttonUrl from "../assets/sounds/button.mp3";
 import clearUrl from "../assets/sounds/clear.mp3";
 import gameOverUrl from "../assets/sounds/game-over.mp3";
 import goalUrl from "../assets/sounds/goal.mp3";
-import hitUrl from "../assets/sounds/hit.mp3";
+import damageUrl from "../assets/sounds/hit.mp3";
 import pickupUrl from "../assets/sounds/pickup.mp3";
 import reviveUrl from "../assets/sounds/revive.mp3";
 import type { BgmLevel, SoundId } from "./cues";
@@ -11,7 +11,7 @@ import { bgmVolume, type Volumes } from "./volume";
 
 const SOUND_URLS: Readonly<Record<SoundId, string>> = {
   pickup: pickupUrl,
-  hit: hitUrl,
+  damage: damageUrl,
   goal: goalUrl,
   revive: reviveUrl,
   clear: clearUrl,

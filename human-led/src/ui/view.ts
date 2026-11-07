@@ -38,6 +38,16 @@ export function describeModules(modules: readonly ModuleId[], t: Messages): Modu
   return [...counts].map(([module, count]) => ({ module, name: t.modules[module].name, count }));
 }
 
+/** HUDの1行。countは今持っている数で、使い切るモジュールを全部使ったらusedUp */
+export type HudModuleLine = ModuleLine & { readonly usedUp: boolean };
+
+export function describeHudModules(run: RunState, t: Messages): HudModuleLine[] {
+  return describeModules(run.purchased, t).map((line) => {
+    const count = run.modules.filter((m) => m === line.module).length;
+    return { ...line, count, usedUp: count === 0 };
+  });
+}
+
 export type ReviveOption = ModuleLine & { readonly hp: number; readonly maxHp: number };
 
 export function reviveOptions(run: RunState, t: Messages): ReviveOption[] {

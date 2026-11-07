@@ -5,7 +5,7 @@ import { startRun } from "../logic/game";
 import { openShop } from "../logic/shop";
 import { cleared, TEST_TUNING } from "../logic/testing";
 import type { Game, ModuleId, Offer } from "../logic/types";
-import { describeModules, describeOffers, reviveOptions } from "./view";
+import { describeHudModules, describeModules, describeOffers, reviveOptions } from "./view";
 
 const { en } = MESSAGES;
 
@@ -68,6 +68,40 @@ describe("describeModules", () => {
 
   test("1つもなければ空", () => {
     expect(describeModules([], en)).toEqual([]);
+  });
+});
+
+describe("describeHudModules", () => {
+  const runWith = (purchased: readonly ModuleId[], modules: readonly ModuleId[]) => ({
+    ...startRun(1).run,
+    purchased,
+    modules,
+  });
+
+  test("買ったモジュールを種類ごとに1行にまとめ、買った順に並べる", () => {
+    const run = runWith(["maxHpPlus1", "revive", "maxHpPlus1"], ["maxHpPlus1", "revive", "maxHpPlus1"]);
+    expect(describeHudModules(run, en).map((l) => l.module)).toEqual(["maxHpPlus1", "revive"]);
+  });
+
+  test("使い切らないモジュールは、買った数を出し、使い切っていない", () => {
+    const run = runWith(["maxHpPlus1", "maxHpPlus1"], ["maxHpPlus1", "maxHpPlus1"]);
+    expect(describeHudModules(run, en)).toEqual([{ module: "maxHpPlus1", name: "Max HP +1", count: 2, usedUp: false }]);
+  });
+
+  test("使い切るモジュールを一部使ったら、残りの数を出し、使い切っていない", () => {
+    const run = runWith(["revive", "revive"], ["revive"]);
+    expect(describeHudModules(run, en)).toEqual([{ module: "revive", name: "Revive (Full)", count: 1, usedUp: false }]);
+  });
+
+  test("使い切るモジュールを全部使ったら、行は残り、使い切っている", () => {
+    const run = runWith(["wallDamageImmunity", "wallDamageImmunity"], []);
+    expect(describeHudModules(run, en)).toEqual([
+      { module: "wallDamageImmunity", name: "Wall Damage Immunity", count: 0, usedUp: true },
+    ]);
+  });
+
+  test("何も買っていなければ空", () => {
+    expect(describeHudModules(runWith([], []), en)).toEqual([]);
   });
 });
 

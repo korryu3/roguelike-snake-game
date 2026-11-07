@@ -24,9 +24,14 @@ describe("soundsFor", () => {
     expect(sounds(prev, tick(prev))).toEqual(["pickup"]);
   });
 
-  it("壁や体にぶつかったら、ぶつかる音", () => {
+  it("ダメージを受けたら、ダメージの音", () => {
     const prev = begin("right", { walls: [AHEAD] });
-    expect(sounds(prev, tick(prev))).toEqual(["hit"]);
+    expect(sounds(prev, tick(prev))).toEqual(["damage"]);
+  });
+
+  it("ぶつかってもダメージを受けなければ、ダメージの音は鳴らない", () => {
+    const prev = begin("right", { walls: [AHEAD], modules: ["wallDamageImmunity"] });
+    expect(sounds(prev, tick(prev))).toEqual([]);
   });
 
   it("ゴールが出たら、ゴールの音も鳴る", () => {
@@ -44,9 +49,9 @@ describe("soundsFor", () => {
     expect(sounds(prev, tick(prev))).toEqual(["clear"]);
   });
 
-  it("HPが0でゲームオーバーになったら、ぶつかる音とゲームオーバーの音", () => {
+  it("HPが0でゲームオーバーになったら、ダメージの音とゲームオーバーの音", () => {
     const prev = begin("right", { walls: [AHEAD], hp: 1 });
-    expect(sounds(prev, tick(prev))).toEqual(["hit", "gameOver"]);
+    expect(sounds(prev, tick(prev))).toEqual(["damage", "gameOver"]);
   });
 
   it("タイムアップでゲームオーバーになったら、ゲームオーバーの音", () => {

@@ -1,12 +1,12 @@
 import type { Game, GameEvent } from "../logic/types";
 import type { Screen } from "../loop/view";
 
-export type SoundId = "pickup" | "hit" | "goal" | "revive" | "clear" | "gameOver" | "button";
+export type SoundId = "pickup" | "damage" | "goal" | "revive" | "clear" | "gameOver" | "button";
 
 /** ロジックの状態が変わったときに鳴らす効果音。ボタンの音は画面が鳴らす */
 export function soundsFor(prev: Game, next: Game, events: readonly GameEvent[]): SoundId[] {
   const fromEvents = events.flatMap((event): SoundId[] => {
-    const sound = EVENT_SOUNDS[event.type];
+    const sound = soundOf(event);
     return sound ? [sound] : [];
   });
   // 諦めたときはイベントが出ないので、局面が変わったことで決める
@@ -14,16 +14,25 @@ export function soundsFor(prev: Game, next: Game, events: readonly GameEvent[]):
   return gameOver ? [...fromEvents, "gameOver"] : fromEvents;
 }
 
-const EVENT_SOUNDS: Readonly<Record<GameEvent["type"], SoundId | null>> = {
-  batteryEaten: "pickup",
-  heartCollected: "pickup",
-  collided: "hit",
-  goalAppeared: "goal",
-  revived: "revive",
-  cleared: "clear",
-  hpDepleted: null,
-  timeUp: null,
-};
+function soundOf(event: GameEvent): SoundId | null {
+  switch (event.type) {
+    case "batteryEaten":
+    case "heartCollected":
+      return "pickup";
+    // ぶつかったことより、ダメージを受けたことを知らせる。無敵時間中や壁ダメージ無効で防いだときは鳴らさない
+    case "collided":
+      return event.damaged ? "damage" : null;
+    case "goalAppeared":
+      return "goal";
+    case "revived":
+      return "revive";
+    case "cleared":
+      return "clear";
+    case "hpDepleted":
+    case "timeUp":
+      return null;
+  }
+}
 
 export type BgmLevel = "normal" | "ducked";
 

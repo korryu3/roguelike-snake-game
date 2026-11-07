@@ -1,0 +1,112 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * 色はここに1か所だけ書く。画面の部品はTailwindのクラスで、盤面のCanvasは起動時にこの変数を読んで使う。
+ * ゲームの画面は暗い配色だけなので、明るい配色（.dark の切り替え）は持たない。
+ */
+@theme static {
+  /* 盤面（Canvas） */
+  --color-board-floor: #0f1a2b;
+  --color-board-grid: #1b2a42;
+  --color-board-center: #060c16;
+  --color-wall: #46546b;
+  --color-wall-edge: #6b7a92;
+  --color-battery: #4ade80;
+  --color-battery-cap: #bbf7d0;
+  --color-double-battery: #c084fc;
+  --color-double-battery-cap: #e9d5ff;
+  --color-double-battery-mark: #2e1065;
+  --color-goal: #facc15;
+  --color-heart: #f43f5e;
+  --color-snake-head: #7dd3fc;
+  --color-snake-body: #0ea5e9;
+  --color-stunned-head: #fdba74;
+  --color-stunned-body: #f97316;
+
+  /* 画面の部品だけで使う色 */
+  --color-highlight: #7dd3fc;
+  --color-gold: #facc15;
+  --color-success: #4ade80;
+  --color-panel-edge: #1b2a42;
+  --color-heart-empty: #4b5563;
+}
+
+@theme inline {
+  /* ネットにつながっていないときは、ふつうのフォントで表示する */
+  --font-sans: "WDXL Lubrifont JP N", system-ui, -apple-system, "Hiragino Sans", sans-serif;
+  --font-heading: var(--font-sans);
+  /* 調整パネルは開発用の道具なので、ゲームのフォントにしない */
+  --font-tool: system-ui, -apple-system, "Hiragino Sans", sans-serif;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/* shadcn/uiの部品が使う色を、ゲームの配色に合わせる */
+:root {
+  color-scheme: dark;
+  --background: #070d18;
+  --foreground: #e2e8f0;
+  --card: #0b1424;
+  --card-foreground: #e2e8f0;
+  --popover: #0b1424;
+  --popover-foreground: #e2e8f0;
+  --primary: #0ea5e9;
+  --primary-foreground: #0f172a;
+  --secondary: #1e293b;
+  --secondary-foreground: #e2e8f0;
+  --muted: #1b2a42;
+  --muted-foreground: #94a3b8;
+  --accent: #273449;
+  --accent-foreground: #e2e8f0;
+  --destructive: #f43f5e;
+  --border: #334155;
+  --input: #334155;
+  --ring: #7dd3fc;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply m-0 bg-background font-sans text-foreground;
+  }
+}
+
+/* 点滅させて目を引く（ゴールが出たときの進行バー、「方向キーで開始」） */
+@keyframes glow {
+  from {
+    filter: brightness(0.85);
+  }
+  to {
+    filter: brightness(1.3);
+  }
+}
+
+@utility animate-glow {
+  animation: glow 0.8s ease-in-out infinite alternate;
+}

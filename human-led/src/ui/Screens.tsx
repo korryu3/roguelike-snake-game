@@ -1,6 +1,8 @@
 import type { Messages } from "../i18n/messages";
 import type { Game } from "../logic/types";
+import { GameButton } from "./GameButton";
 import { ModuleChips } from "./Hud";
+import { Stat, Stats } from "./Stats";
 import { describeModules } from "./view";
 
 /** 日本語を読めない人も見つけられるように、タイトルの設定ボタンは言語によらず両方の言葉で出す */
@@ -14,14 +16,19 @@ type TitleProps = {
 
 export function TitleScreen({ t, onStart, onOpenSettings }: TitleProps) {
   return (
-    <section className="screen title-screen">
-      <h1 className="game-title">{t.title}</h1>
-      <button type="button" className="button button-primary button-large" autoFocus onClick={onStart}>
-        {t.startGame}
-      </button>
-      <button type="button" className="button" onClick={onOpenSettings}>
-        {TITLE_SETTINGS_LABEL}
-      </button>
+    <section className="flex flex-col items-center gap-8">
+      <h1 className="m-0 text-6xl tracking-widest text-highlight [text-shadow:0_0_24px_rgb(14_165_233/0.6)]">
+        {t.title}
+      </h1>
+      {/* 幅は長いほうの文字に合わせてそろえ、設定は高さを低くして控えめにする */}
+      <div className="flex flex-col items-stretch gap-6">
+        <GameButton size="hero" autoFocus onClick={onStart}>
+          {t.startGame}
+        </GameButton>
+        <GameButton tone="normal" onClick={onOpenSettings}>
+          {TITLE_SETTINGS_LABEL}
+        </GameButton>
+      </div>
     </section>
   );
 }
@@ -31,44 +38,36 @@ type GameOverProps = {
   readonly t: Messages;
   readonly onRetry: () => void;
   readonly onTitle: () => void;
-  readonly onOpenSettings: () => void;
 };
 
-export function GameOverScreen({ game, t, onRetry, onTitle, onOpenSettings }: GameOverProps) {
+/** 設定は、モジュール選択などと同じく、Escで開く */
+export function GameOverScreen({ game, t, onRetry, onTitle }: GameOverProps) {
   const { run } = game;
   const g = t.gameOver;
   return (
-    <section className="screen">
-      <h1 className="screen-title">{g.title}</h1>
-      <dl className="stats">
-        <dt>{g.cause}</dt>
-        <dd>{g.causes[game.cause]}</dd>
-        <dt>{g.reachedStage}</dt>
-        <dd>{run.stageNumber}</dd>
-        <dt>{g.score}</dt>
-        <dd>{run.score}</dd>
-        <dt>{g.totalPp}</dt>
-        <dd>{run.totalPp}</dd>
-        <dt>{g.remainingPp}</dt>
-        <dd>{run.pp}</dd>
-        <dt>{g.length}</dt>
-        <dd>{run.length}</dd>
-        <dt>{g.modules}</dt>
-        <dd className="stats-modules">
-          <ModuleChips lines={describeModules(run.purchased, t)} t={t} empty={g.noModules} />
-        </dd>
-      </dl>
-      <div className="modal-actions">
-        <button type="button" className="button" onClick={onTitle}>
+    <section className="flex flex-col items-center gap-5">
+      <h1 className="m-0 text-4xl">{g.title}</h1>
+      <Stats>
+        <Stat label={g.cause}>{g.causes[game.cause]}</Stat>
+        <Stat label={g.reachedStage}>{run.stageNumber}</Stat>
+        <Stat label={g.score}>{run.score}</Stat>
+        <Stat label={g.totalPp}>{run.totalPp}</Stat>
+        <Stat label={g.remainingPp}>{run.pp}</Stat>
+        <Stat label={g.length}>{run.length}</Stat>
+        <Stat label={g.modules}>
+          <span className="flex max-w-90 flex-wrap justify-end gap-1.5">
+            <ModuleChips lines={describeModules(run.purchased, t)} t={t} empty={g.noModules} />
+          </span>
+        </Stat>
+      </Stats>
+      <div className="flex justify-center gap-3">
+        <GameButton tone="normal" onClick={onTitle}>
           {g.toTitle}
-        </button>
-        <button type="button" className="button button-primary" autoFocus onClick={onRetry}>
+        </GameButton>
+        <GameButton autoFocus onClick={onRetry}>
           {g.retry}
-        </button>
+        </GameButton>
       </div>
-      <button type="button" className="button" onClick={onOpenSettings}>
-        {t.settings.openOutsideStage}
-      </button>
     </section>
   );
 }

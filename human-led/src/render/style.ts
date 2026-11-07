@@ -2,21 +2,33 @@ export const CELL_PX = 32;
 export const boardPx = (boardSize: number) => CELL_PX * boardSize;
 export const BLINK_INTERVAL_MS = 100;
 
-export const COLORS = {
-  floor: "#0f1a2b",
-  gridLine: "#1b2a42",
-  center: "#060c16",
-  wall: "#46546b",
-  wallEdge: "#6b7a92",
-  battery: "#4ade80",
-  batteryCap: "#bbf7d0",
-  doubleBattery: "#c084fc",
-  doubleBatteryCap: "#e9d5ff",
-  doubleBatteryMark: "#2e1065",
-  goal: "#facc15",
-  heart: "#f43f5e",
-  snakeHead: "#7dd3fc",
-  snakeBody: "#0ea5e9",
-  stunnedHead: "#fdba74",
-  stunnedBody: "#f97316",
+/** 盤面の色と、テーマ（index.css）でのCSS変数の名前 */
+const CSS_VARIABLES = {
+  floor: "--color-board-floor",
+  gridLine: "--color-board-grid",
+  center: "--color-board-center",
+  wall: "--color-wall",
+  wallEdge: "--color-wall-edge",
+  battery: "--color-battery",
+  batteryCap: "--color-battery-cap",
+  doubleBattery: "--color-double-battery",
+  doubleBatteryCap: "--color-double-battery-cap",
+  doubleBatteryMark: "--color-double-battery-mark",
+  goal: "--color-goal",
+  heart: "--color-heart",
+  snakeHead: "--color-snake-head",
+  snakeBody: "--color-snake-body",
+  stunnedHead: "--color-stunned-head",
+  stunnedBody: "--color-stunned-body",
 } as const;
+
+export type BoardColors = Readonly<Record<keyof typeof CSS_VARIABLES, string>>;
+
+export const BOARD_COLOR_KEYS = Object.keys(CSS_VARIABLES) as readonly (keyof BoardColors)[];
+
+/** 色はテーマに1か所だけ書き、ここではCSS変数の名前から読む */
+export function readBoardColors(readCssVariable: (name: string) => string): BoardColors {
+  return Object.fromEntries(
+    BOARD_COLOR_KEYS.map((key) => [key, readCssVariable(CSS_VARIABLES[key]).trim()]),
+  ) as BoardColors;
+}

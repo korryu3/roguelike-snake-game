@@ -1,4 +1,9 @@
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { DEFAULT_TUNING, MODULE_IDS, type Config, type ModuleSpec, type Tuning } from "../config";
 import type { ModuleId, WallPattern, WallPatternIssue } from "../logic/types";
 import { checkWallPattern } from "../logic/wallPatterns";
@@ -18,6 +23,21 @@ type Props = {
 const GROUPS = [...new Set(CONFIG_KEYS.map((key) => CONFIG_FIELDS[key].group))];
 
 const toJson = (tuning: Tuning) => JSON.stringify(tuning, null, 2);
+
+const MODULE_ROW = "grid grid-cols-[1fr_56px_56px] items-center gap-2";
+const HINT = "m-0 text-xs text-muted-foreground";
+const NOTE = "m-0 text-xs text-gold";
+const ACTIONS = "flex flex-wrap gap-2";
+const MONO = "font-mono text-xs";
+
+function Group({ legend, children }: { legend: string; children: ReactNode }) {
+  return (
+    <fieldset className="m-0 flex flex-col gap-1.5 rounded-lg border border-panel-edge px-2.5 py-2">
+      <legend className="px-1 text-muted-foreground">{legend}</legend>
+      {children}
+    </fieldset>
+  );
+}
 
 export function TuningPanel({ draft, running, saved, onChange, onRestart }: Props) {
   // 既定値に戻す・読み込むで値が外から変わったら、入力途中の文字列ごと作り直す
@@ -70,53 +90,55 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
   };
 
   return (
-    <aside className="tuning" aria-label="調整パネル" data-silent>
-      <header className="tuning-header">
-        <h2>数値の調整</h2>
-        <span className="tuning-hint">Tで閉じる。開いているあいだは止まる</span>
+    <aside
+      className="fixed inset-y-0 right-0 z-40 flex w-[min(380px,100vw)] flex-col gap-2.5 overflow-y-auto border-l-2 border-panel-edge bg-card p-4 font-tool text-[13px]"
+      aria-label="調整パネル"
+      data-silent
+    >
+      <header>
+        <h2 className="m-0 text-lg">数値の調整</h2>
+        <span className={HINT}>Tで閉じる。開いているあいだは止まる</span>
       </header>
-      <div className="tuning-actions">
-        <button type="button" className="tuning-primary" onClick={() => onRestart(draft)}>
+      <div className={ACTIONS}>
+        <Button size="sm" onClick={() => onRestart(draft)}>
           この数値で始め直す
-        </button>
-        <button type="button" onClick={() => replace(DEFAULT_TUNING, ["既定値に戻した"])}>
+        </Button>
+        <Button size="sm" variant="secondary" onClick={() => replace(DEFAULT_TUNING, ["既定値に戻した"])}>
           既定値に戻す
-        </button>
+        </Button>
       </div>
-      <p
-        className={`tuning-note${hasPendingChanges ? "" : " tuning-note-placeholder"}`}
-        aria-hidden={!hasPendingChanges}
-      >
+      <p className={cn(NOTE, !hasPendingChanges && "invisible")} aria-hidden={!hasPendingChanges}>
         今のランにはまだ反映していない
       </p>
-      {!saved && <p className="tuning-note">この環境では保存できない。閉じると消える</p>}
+      {!saved && <p className={NOTE}>この環境では保存できない。閉じると消える</p>}
 
-      <div key={revision}>
+      <div key={revision} className="flex flex-col gap-2.5">
         {GROUPS.map((group) => (
-          <fieldset key={group} className="tuning-group">
-            <legend>{group}</legend>
+          <Group key={group} legend={group}>
             {CONFIG_KEYS.filter((key) => CONFIG_FIELDS[key].group === group).map((key) => (
-              <label key={key} className="tuning-field">
-                <span>{CONFIG_FIELDS[key].label}</span>
+              <div key={key} className="grid grid-cols-[1fr_88px] items-center gap-2">
+                <Label htmlFor={`tuning-${key}`} className="text-[13px] font-normal">
+                  {CONFIG_FIELDS[key].label}
+                </Label>
                 <NumberInput
+                  id={`tuning-${key}`}
                   rule={CONFIG_FIELDS[key].rule}
                   value={draft.config[key]}
                   onCommit={(v) => setConfig(key, v)}
                 />
-              </label>
+              </div>
             ))}
-          </fieldset>
+          </Group>
         ))}
-        <fieldset className="tuning-group">
-          <legend>モジュール</legend>
-          <div className="tuning-module tuning-module-head">
+        <Group legend="モジュール">
+          <div className={cn(MODULE_ROW, "text-xs text-muted-foreground")}>
             <span />
             {SPEC_KEYS.map((key) => (
               <span key={key}>{MODULE_SPEC_FIELDS[key].label}</span>
             ))}
           </div>
           {MODULE_IDS.map((id) => (
-            <div key={id} className="tuning-module">
+            <div key={id} className={MODULE_ROW}>
               <span>{MESSAGES.ja.modules[id].name}</span>
               {SPEC_KEYS.map((key) => (
                 <NumberInput
@@ -129,51 +151,54 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
               ))}
             </div>
           ))}
-        </fieldset>
-        <fieldset className="tuning-group">
-          <legend>壁のパターン</legend>
-          <p className="tuning-hint">#が壁、.が床。ステージごとに、この中からランダムに1つ選ぶ</p>
+        </Group>
+        <Group legend="壁のパターン">
+          <p className={HINT}>#が壁、.が床。ステージごとに、この中からランダムに1つ選ぶ</p>
           {draft.wallPatterns.map((pattern, i) => (
-            <div key={i} className="tuning-pattern">
-              <div className="tuning-pattern-head">
+            <div key={i} className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
                 <span>パターン{i + 1}</span>
-                <button type="button" disabled={draft.wallPatterns.length <= 1} onClick={() => removePattern(i)}>
+                <Button
+                  size="xs"
+                  variant="secondary"
+                  disabled={draft.wallPatterns.length <= 1}
+                  onClick={() => removePattern(i)}
+                >
                   削除
-                </button>
+                </Button>
               </div>
               <PatternInput label={`パターン${i + 1}`} pattern={pattern} onCommit={(p) => setPattern(i, p)} />
             </div>
           ))}
-          <div className="tuning-actions">
-            <button type="button" onClick={addPattern}>
+          <div className={ACTIONS}>
+            <Button size="sm" variant="secondary" onClick={addPattern}>
               パターンを追加
-            </button>
+            </Button>
           </div>
-        </fieldset>
+        </Group>
       </div>
 
-      <fieldset className="tuning-group">
-        <legend>JSON</legend>
-        <div className="tuning-actions">
-          <button type="button" onClick={exportJson}>
+      <Group legend="JSON">
+        <div className={ACTIONS}>
+          <Button size="sm" variant="secondary" onClick={exportJson}>
             JSONを書き出す
-          </button>
-          <button type="button" onClick={importJson}>
+          </Button>
+          <Button size="sm" variant="secondary" onClick={importJson}>
             読み込む
-          </button>
+          </Button>
         </div>
-        <textarea
+        <Textarea
           ref={jsonRef}
-          className="tuning-json"
+          className={cn(MONO, "min-h-36")}
           aria-label="JSON"
           spellCheck={false}
           value={jsonText}
           placeholder="書き出したJSONがここに出る。貼り付けて「読み込む」でも反映できる"
           onChange={(e) => setJsonText(e.target.value)}
         />
-      </fieldset>
+      </Group>
       {messages.length > 0 && (
-        <ul className="tuning-messages">
+        <ul className="m-0 pl-4.5 text-foreground/80">
           {messages.map((m, i) => (
             <li key={i}>{m}</li>
           ))}
@@ -184,11 +209,13 @@ export function TuningPanel({ draft, running, saved, onChange, onRestart }: Prop
 }
 
 function NumberInput({
+  id,
   rule,
   value,
   onCommit,
   label,
 }: {
+  id?: string;
   rule: Rule;
   value: number;
   onCommit: (value: number) => void;
@@ -198,9 +225,10 @@ function NumberInput({
   const parsed = text.trim() === "" ? Number.NaN : Number(text);
   const valid = satisfies(rule, parsed);
   return (
-    <input
+    <Input
+      id={id}
       type="number"
-      className={valid ? "tuning-input" : "tuning-input tuning-invalid"}
+      className="h-7 px-1.5 text-[13px] tabular-nums"
       aria-label={label}
       aria-invalid={!valid}
       title={valid ? undefined : describeRule(rule)}
@@ -237,8 +265,11 @@ function PatternInput({
   const issue = checkWallPattern(patternFromText(text));
   return (
     <>
-      <textarea
-        className={issue ? "tuning-json tuning-pattern-input tuning-invalid" : "tuning-json tuning-pattern-input"}
+      <Textarea
+        className={cn(
+          MONO,
+          "min-h-0 leading-[1.1] tracking-[0.3em] [field-sizing:fixed] whitespace-pre overflow-x-auto",
+        )}
         aria-label={label}
         aria-invalid={issue !== null}
         spellCheck={false}
@@ -250,7 +281,7 @@ function PatternInput({
           if (checkWallPattern(next) === null) onCommit(next);
         }}
       />
-      {issue && <p className="tuning-error">{PATTERN_ISSUES[issue]}。直すまで反映しない</p>}
+      {issue && <p className="m-0 text-xs text-destructive">{PATTERN_ISSUES[issue]}。直すまで反映しない</p>}
     </>
   );
 }
