@@ -75,6 +75,7 @@ export function App({ session, audio, tuningStorage, preferencesStorage, initial
             onChange={changePreferences}
             onSfxPreview={() => audio.play("pickup")}
             onClose={toggleMenu}
+            onGiveUp={menuReturnsToStage(view, game) ? () => session.perform({ kind: "giveUp" }) : undefined}
           />
         )}
         {view.panelOpen && (

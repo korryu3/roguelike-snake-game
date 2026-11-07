@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
@@ -16,11 +17,13 @@ type Props = {
   /** 効果音の音量を決めたあと、聞いて確かめられるように鳴らす */
   readonly onSfxPreview: () => void;
   readonly onClose: () => void;
+  /** ステージ中だけ渡す。押すと、確かめてからランを終える */
+  readonly onGiveUp?: () => void;
 };
 
 const ROW = "grid w-full grid-cols-[7em_1fr_3.5em] items-center gap-3";
 
-export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPreview, onClose }: Props) {
+export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPreview, onClose, onGiveUp }: Props) {
   const { lang, volumes } = preferences;
   const setVolumes = (next: Partial<Preferences["volumes"]>) =>
     onChange({ ...preferences, volumes: { ...volumes, ...next } });
@@ -61,7 +64,35 @@ export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPr
           {returnsToStage ? t.settings.resume : t.settings.close}
         </GameButton>
       </div>
+      {onGiveUp && <GiveUp t={t} onGiveUp={onGiveUp} />}
     </GameDialog>
+  );
+}
+
+/** 押し間違えるとランが終わるので、「再開」から離して置き、もう一度確かめる */
+function GiveUp({ t, onGiveUp }: { t: Messages; onGiveUp: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  return (
+    <div className="flex w-full flex-col items-center gap-2 border-t border-border pt-3">
+      {confirming ? (
+        <>
+          <p className="m-0">{t.settings.confirmGiveUp}</p>
+          <div className="flex gap-3">
+            <GameButton tone="normal" onClick={() => setConfirming(false)}>
+              {t.settings.keepPlaying}
+            </GameButton>
+            {/* ゲームオーバーの音が鳴るので、ボタンの音は鳴らさない */}
+            <GameButton tone="normal" className="text-destructive" data-silent onClick={onGiveUp}>
+              {t.settings.giveUp}
+            </GameButton>
+          </div>
+        </>
+      ) : (
+        <GameButton tone="normal" className="text-destructive" onClick={() => setConfirming(true)}>
+          {t.settings.giveUp}
+        </GameButton>
+      )}
+    </div>
   );
 }
 
