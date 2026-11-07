@@ -27,6 +27,11 @@ jobs:
           version-file: package.json
           node-version-file: package.json
 
+      # mainへ直接pushしたときも、整形・lint・型検査を通ったものだけを公開する
+      - name: Check
+        working-directory: human-led
+        run: vp check
+
       - name: Test
         working-directory: human-led
         run: vp test run

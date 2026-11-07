@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 import type { Messages } from "../i18n/messages";
 import { effectsOf } from "../logic/modules";
 import type { Game } from "../logic/types";
-import { boardPx } from "../render/style";
 import { formatRemainingTime } from "./format";
 import { ModuleBadge, ModuleImage } from "./ModuleIcon";
 import { useSprites } from "./sprites";
+import { hudWidth } from "./layout";
 import { describeHudModules, type ModuleLine } from "./view";
 
 export function Hud({ game, t }: { game: Game; t: Messages }) {
@@ -17,7 +17,7 @@ export function Hud({ game, t }: { game: Game; t: Messages }) {
   const eaten = stage?.batteriesEaten ?? 0;
   const progress = Math.min(1, eaten / config.batteriesToGoal);
   const modules = describeHudModules(run, t);
-  const width = boardPx(config.boardSize);
+  const width = hudWidth(config.boardSize);
   return (
     <div className="flex flex-col gap-2" style={{ width }}>
       <div className="flex items-center justify-between gap-3 text-lg tabular-nums">
@@ -67,7 +67,7 @@ type ProgressProps = {
   readonly progress: number;
   /** ゴールが出たら光らせる */
   readonly ready: boolean;
-  readonly width: number;
+  readonly width: string;
   readonly children: ReactNode;
 };
 
@@ -89,7 +89,7 @@ function ProgressBar({ progress, ready, width, children }: ProgressProps) {
         )}
         style={{
           width: `${progress * 100}%`,
-          ...(images && { background: `url(${progressFull}) left / ${width}px 100%` }),
+          ...(images && { background: `url(${progressFull}) left / ${width} 100%` }),
         }}
       />
       <span className="absolute inset-0 grid place-items-center text-xs font-bold text-primary-foreground">

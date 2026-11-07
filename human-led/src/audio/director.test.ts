@@ -28,6 +28,7 @@ describe("connectAudio", () => {
     const session = createSession(seeds(), undefined, () => game);
     const { player, calls } = fakePlayer();
     connectAudio(session, player);
+    session.startNewRun();
     session.advance(CONFIG.moveIntervalMs);
     expect(calls).toContain("play:pickup");
   });

@@ -58,8 +58,22 @@ describe("step: ぶつかる", () => {
 
   it("止まる時間が過ぎると、溜まった入力の最後の方向へ動き出す", () => {
     const hit = tick(begin("right", { walls: [{ x: 8, y: 7 }] })).game;
-    const resumed = step(hit, ["up", "left"], CONFIG.stunMs).game;
-    expect(headOf(tick(resumed).game)).toEqual({ x: 6, y: 7 });
+    const resumed = step(hit, ["down", "up"], CONFIG.stunMs).game;
+    expect(headOf(tick(resumed).game)).toEqual({ x: 7, y: 6 });
+  });
+
+  it("止まっているあいだに何度か押すと、最後に押した方向へ動き出す", () => {
+    const hit = tick(begin("right", { walls: [{ x: 8, y: 7 }] })).game;
+    const pressed = step(hit, ["up", "down"], 10).game;
+    const later = step(pressed, ["up", "down", "up", "down"], 10).game;
+    const resumed = step(later, [], CONFIG.stunMs).game;
+    expect(movementOf(resumed).direction).toBe("down");
+  });
+
+  it("止まっているあいだの真後ろの入力は捨てる", () => {
+    const hit = tick(begin("right", { walls: [{ x: 8, y: 7 }] })).game;
+    const resumed = step(step(hit, ["up", "left"], 10).game, [], CONFIG.stunMs).game;
+    expect(movementOf(resumed).direction).toBe("up");
   });
 
   it("入力がなければ、すぐ先が壁でも体でもない方向へ動き出す", () => {

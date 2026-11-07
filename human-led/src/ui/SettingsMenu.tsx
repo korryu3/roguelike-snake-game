@@ -47,7 +47,6 @@ export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPr
             <GameButton
               key={l}
               tone="normal"
-
               className={cn(l === lang && "border-highlight text-highlight")}
               aria-pressed={l === lang}
               onClick={() => onChange({ ...preferences, lang: l })}
@@ -86,7 +85,7 @@ function VolumeSlider({ id, label, value, onChange, onCommit }: SliderProps) {
         aria-label={label}
         min={0}
         max={100}
-        step={5}
+        step={1}
         value={[percent]}
         onValueChange={([next = percent]) => onChange(next / 100)}
         onValueCommit={onCommit}

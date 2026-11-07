@@ -36,7 +36,7 @@ describe("step: ハートが出る", () => {
 });
 
 describe("step: ハートと重ならない", () => {
-  it("次のバッテリーはハートと重ならず、置き場所がなければハートは出ない", () => {
+  it("次のバッテリーはハートと重ならず、空きマスがなければハートは頭を除く体のマスに出る", () => {
     const lastFree = { x: 0, y: 0 };
     const reserved = [lastFree, AHEAD, CENTER];
     const hearts: Cell[] = Array.from({ length: CONFIG.boardSize ** 2 }, (_, i) => ({
@@ -45,7 +45,8 @@ describe("step: ハートと重ならない", () => {
     })).filter((c) => !reserved.some((r) => sameCell(r, c)));
     const { game } = eatAhead({ hearts, totalPp: CONFIG.heartEveryTotalPp - 1 });
     expect(stageOf(game).battery).toEqual(lastFree);
-    expect(stageOf(game).hearts).toHaveLength(hearts.length);
+    // 体は頭(8,7)と中央(7,7)。中央のマスの体の上に出る
+    expect(stageOf(game).hearts).toEqual([...hearts, CENTER]);
   });
 });
 

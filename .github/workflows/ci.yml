@@ -5,6 +5,7 @@ on:
     paths:
       - "human-led/**"
       - ".github/workflows/ci.yml"
+      - ".github/workflows/deploy-pages.yml"
 
 permissions:
   contents: read

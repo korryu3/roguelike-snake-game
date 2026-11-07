@@ -16,7 +16,6 @@ export function GameDialog({ title, children, className }: Props) {
   return (
     <Dialog open>
       <DialogContent
-        showCloseButton={false}
         aria-describedby={undefined}
         onEscapeKeyDown={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => e.preventDefault()}
