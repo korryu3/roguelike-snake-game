@@ -89,9 +89,11 @@ export function pause(game: Game): StepResult {
   return { game: { ...game, phase: "paused" }, events: [] };
 }
 
+/** 生き返るモーダルで諦めたら死因はHP 0、ステージ中に設定メニューから諦めたら死因は「諦めた」 */
 export function giveUp(game: Game): StepResult {
-  if (game.phase !== "reviveChoice") return { game, events: [] };
-  return { game: { phase: "gameOver", run: game.run, cause: "hp" }, events: [] };
+  if (game.phase === "reviveChoice") return { game: { phase: "gameOver", run: game.run, cause: "hp" }, events: [] };
+  if (game.phase !== "paused" && game.phase !== "awaitingStart") return { game, events: [] };
+  return { game: { phase: "gameOver", run: game.run, cause: "gaveUp" }, events: [] };
 }
 
 type Playing = Extract<Game, { phase: "playing" }>;

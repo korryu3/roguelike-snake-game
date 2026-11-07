@@ -140,6 +140,14 @@ describe("createSession", () => {
       expect(session.store.getSnapshot()).toMatchObject({ phase: "playing", movement: { direction: "left" } });
     });
 
+    test("設定メニューから諦めると、ゲームオーバーになり、設定メニューが閉じる", () => {
+      const session = playingSession();
+      session.command({ kind: "toggleMenu" });
+      session.perform({ kind: "giveUp" });
+      expect(session.store.getSnapshot()).toMatchObject({ phase: "gameOver", cause: "gaveUp" });
+      expect(session.view.getSnapshot().menuOpen).toBe(false);
+    });
+
     test("ステージ中以外では、開いてもゲームは変わらない", () => {
       const game = cleared();
       const session = createSession(seeds(1), TEST_TUNING, () => game);
@@ -200,12 +208,7 @@ describe("createSession", () => {
     test("その局面でできない操作は何も変えない", () => {
       const session = sessionAt(startRun(1));
       const before = session.store.getSnapshot();
-      for (const action of [
-        { kind: "openShop" },
-        { kind: "buy", offerIndex: 0 },
-        { kind: "nextStage" },
-        { kind: "giveUp" },
-      ] as const) {
+      for (const action of [{ kind: "openShop" }, { kind: "buy", offerIndex: 0 }, { kind: "nextStage" }] as const) {
         session.perform(action);
       }
       expect(session.store.getSnapshot()).toBe(before);
