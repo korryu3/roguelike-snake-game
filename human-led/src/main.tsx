@@ -7,6 +7,7 @@ import { createSession } from "./loop/session";
 import { createPreferencesStorage } from "./preferences/storage";
 import { createTuningStorage } from "./tuning/storage";
 import { App } from "./ui/App";
+import "./index.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root が見つからない");

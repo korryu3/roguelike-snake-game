@@ -1,6 +1,11 @@
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { cn } from "@/lib/utils";
 import { LANG_NAMES, LANGS } from "../i18n/lang";
 import type { Messages } from "../i18n/messages";
 import type { Preferences } from "../preferences/storage";
+import { GameDialog } from "./GameDialog";
 
 type Props = {
   readonly t: Messages;
@@ -13,71 +18,80 @@ type Props = {
   readonly onClose: () => void;
 };
 
+const ROW = "grid w-full grid-cols-[7em_1fr_3.5em] items-center gap-3";
+
 export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPreview, onClose }: Props) {
   const { lang, volumes } = preferences;
   const setVolumes = (next: Partial<Preferences["volumes"]>) =>
     onChange({ ...preferences, volumes: { ...volumes, ...next } });
   return (
-    <div className="modal-backdrop">
-      <section className="modal settings" role="dialog" aria-modal="true" aria-label={t.settings.title}>
-        <h2 className="modal-title">{t.settings.title}</h2>
-        <VolumeSlider label={t.settings.bgm} value={volumes.bgm} onChange={(bgm) => setVolumes({ bgm })} />
-        <VolumeSlider
-          label={t.settings.sfx}
-          value={volumes.sfx}
-          onChange={(sfx) => setVolumes({ sfx })}
-          onCommit={onSfxPreview}
-        />
-        <div className="volume">
-          <span className="volume-label">{t.language}</span>
-          {/* 切り替えのボタンには、どちらの言語で遊んでいても、その言語自身の書き方で名前を出す */}
-          <div className="lang-switch" role="group" aria-label={t.language}>
-            {LANGS.map((l) => (
-              <button
-                key={l}
-                type="button"
-                className={l === lang ? "button lang-current" : "button"}
-                aria-pressed={l === lang}
-                onClick={() => onChange({ ...preferences, lang: l })}
-              >
-                {LANG_NAMES[l]}
-              </button>
-            ))}
-          </div>
+    <GameDialog title={t.settings.title} className="w-[min(420px,calc(100vw-2rem))]">
+      <VolumeSlider
+        id="volume-bgm"
+        label={t.settings.bgm}
+        value={volumes.bgm}
+        onChange={(bgm) => setVolumes({ bgm })}
+      />
+      <VolumeSlider
+        id="volume-sfx"
+        label={t.settings.sfx}
+        value={volumes.sfx}
+        onChange={(sfx) => setVolumes({ sfx })}
+        onCommit={onSfxPreview}
+      />
+      <div className={ROW}>
+        <span>{t.language}</span>
+        {/* 切り替えのボタンには、どちらの言語で遊んでいても、その言語自身の書き方で名前を出す */}
+        <div className="flex gap-2" role="group" aria-label={t.language}>
+          {LANGS.map((l) => (
+            <Button
+              key={l}
+              variant="secondary"
+              size="game"
+              className={cn(l === lang && "border-highlight text-highlight")}
+              aria-pressed={l === lang}
+              onClick={() => onChange({ ...preferences, lang: l })}
+            >
+              {LANG_NAMES[l]}
+            </Button>
+          ))}
         </div>
-        <div className="modal-actions">
-          <button type="button" className="button button-primary" autoFocus onClick={onClose}>
-            {returnsToStage ? t.settings.resume : t.settings.close}
-          </button>
-        </div>
-      </section>
-    </div>
+      </div>
+      <div className="flex justify-center gap-3">
+        <Button size="game" autoFocus onClick={onClose}>
+          {returnsToStage ? t.settings.resume : t.settings.close}
+        </Button>
+      </div>
+    </GameDialog>
   );
 }
 
 type SliderProps = {
+  readonly id: string;
   readonly label: string;
   readonly value: number;
   readonly onChange: (value: number) => void;
   readonly onCommit?: () => void;
 };
 
-function VolumeSlider({ label, value, onChange, onCommit }: SliderProps) {
+function VolumeSlider({ id, label, value, onChange, onCommit }: SliderProps) {
   const percent = Math.round(value * 100);
   return (
-    <label className="volume">
-      <span className="volume-label">{label}</span>
-      <input
-        type="range"
+    <div className={ROW}>
+      <Label htmlFor={id} className="text-base">
+        {label}
+      </Label>
+      <Slider
+        id={id}
+        aria-label={label}
         min={0}
         max={100}
         step={5}
-        value={percent}
-        onChange={(e) => onChange(Number(e.target.value) / 100)}
-        onPointerUp={onCommit}
-        onKeyUp={onCommit}
+        value={[percent]}
+        onValueChange={([next = percent]) => onChange(next / 100)}
+        onValueCommit={onCommit}
       />
-      <span className="volume-value">{percent}%</span>
-    </label>
+      <span className="text-right tabular-nums">{percent}%</span>
+    </div>
   );
 }

@@ -1,4 +1,6 @@
 import { type MouseEvent, useEffect, useState, useSyncExternalStore } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { AudioPlayer } from "../audio/player";
 import type { Tuning } from "../config";
 import { MESSAGES, type Messages } from "../i18n/messages";
@@ -14,7 +16,6 @@ import { ClearModal, ReviveModal, ShopModal } from "./Modals";
 import { GameOverScreen, TitleScreen } from "./Screens";
 import { SettingsMenu } from "./SettingsMenu";
 import { TuningPanel } from "./TuningPanel";
-import "./app.css";
 
 type Props = {
   readonly session: Session;
@@ -57,7 +58,7 @@ export function App({ session, audio, tuningStorage, preferencesStorage, initial
 
   const screen = screenOf(view, game);
   return (
-    <main className="app" onClick={playButtonSound}>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-3" onClick={playButtonSound}>
       {screen === "title" && <TitleScreen t={t} onStart={session.startNewRun} onOpenSettings={toggleMenu} />}
       {screen === "gameOver" && game.phase === "gameOver" && (
         <GameOverScreen
@@ -69,7 +70,7 @@ export function App({ session, audio, tuningStorage, preferencesStorage, initial
         />
       )}
       {screen === "stage" && <StageView game={game} t={t} session={session} onOpenSettings={toggleMenu} />}
-      <p className="controls">{t.controls}</p>
+      <p className="fixed right-4 bottom-3 m-0 text-sm text-muted-foreground">{t.controls}</p>
       {view.menuOpen && (
         <SettingsMenu
           t={t}
@@ -106,16 +107,19 @@ function StageView({ game, t, session, onOpenSettings }: StageProps) {
   return (
     <>
       {/* 盤面と同じ幅の列の右上、時間制限の真上に置く */}
-      <div className="top-bar" style={{ width: boardPx(game.run.tuning.config.boardSize) }}>
-        <button type="button" className="button settings-open" onClick={onOpenSettings}>
+      <div
+        className="flex max-w-[calc(100vw-2rem)] justify-end"
+        style={{ width: boardPx(game.run.tuning.config.boardSize) }}
+      >
+        <Button variant="secondary" size="sm" onClick={onOpenSettings}>
           {t.settings.open}
-        </button>
+        </Button>
       </div>
       <Hud game={game} t={t} />
-      <div className="board">
+      <div className="relative border-2 border-panel-edge">
         <Board game={game} />
       </div>
-      <p className="board-hint" style={{ visibility: waiting ? "visible" : "hidden" }}>
+      <p className={cn("m-0 animate-glow text-lg font-bold", !waiting && "invisible")}>
         {game.phase === "paused" ? t.pressToResume : t.pressToStart}
       </p>
       {game.phase === "cleared" && <ClearModal game={game} t={t} perform={perform} />}
