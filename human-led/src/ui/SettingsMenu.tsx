@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { LANG_NAMES, LANGS } from "../i18n/lang";
 import type { Messages } from "../i18n/messages";
 import type { Preferences } from "../preferences/storage";
+import { GameButton } from "./GameButton";
 import { GameDialog } from "./GameDialog";
 
 type Props = {
@@ -44,23 +44,23 @@ export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPr
         {/* 切り替えのボタンには、どちらの言語で遊んでいても、その言語自身の書き方で名前を出す */}
         <div className="flex gap-2" role="group" aria-label={t.language}>
           {LANGS.map((l) => (
-            <Button
+            <GameButton
               key={l}
-              variant="secondary"
-              size="game"
+              tone="normal"
+
               className={cn(l === lang && "border-highlight text-highlight")}
               aria-pressed={l === lang}
               onClick={() => onChange({ ...preferences, lang: l })}
             >
               {LANG_NAMES[l]}
-            </Button>
+            </GameButton>
           ))}
         </div>
       </div>
       <div className="flex justify-center gap-3">
-        <Button size="game" autoFocus onClick={onClose}>
+        <GameButton autoFocus onClick={onClose}>
           {returnsToStage ? t.settings.resume : t.settings.close}
-        </Button>
+        </GameButton>
       </div>
     </GameDialog>
   );

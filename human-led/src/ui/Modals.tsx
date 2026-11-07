@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Messages } from "../i18n/messages";
 import type { Game } from "../logic/types";
 import type { ScreenAction } from "../loop/session";
 import { formatRemainingTime } from "./format";
+import { GameButton } from "./GameButton";
 import { GameDialog } from "./GameDialog";
+import { ModuleImage } from "./ModuleIcon";
 import { Stat, Stats } from "./Stats";
 import { describeOffers, reviveOptions } from "./view";
 
@@ -31,9 +32,9 @@ export function ClearModal({ game, t, perform }: Props<"cleared">) {
         <Stat label={t.cleared.elapsed}>{formatRemainingTime(summary.elapsedMs)}</Stat>
       </Stats>
       <Actions>
-        <Button size="game" autoFocus onClick={() => perform({ kind: "openShop" })}>
+        <GameButton autoFocus onClick={() => perform({ kind: "openShop" })}>
           {t.cleared.toShop}
-        </Button>
+        </GameButton>
       </Actions>
     </GameDialog>
   );
@@ -50,32 +51,35 @@ export function ShopModal({ game, t, perform }: Props<"shop">) {
             key={offer.offerIndex}
             className={cn("flex flex-col gap-2 rounded-xl border bg-board-floor p-3.5", offer.sold && "opacity-50")}
           >
-            <h3 className="m-0 text-[17px]">{offer.name}</h3>
+            <div className="flex items-center gap-2">
+              <ModuleImage module={offer.module} name="" />
+              <h3 className="m-0 text-[17px]">{offer.name}</h3>
+            </div>
             <p className="m-0 flex-1 text-sm text-foreground/80">{offer.description}</p>
             <p className="m-0 font-bold text-gold">{t.shop.price(offer.price)}</p>
-            <Button
-              variant="secondary"
-              size="game"
+            <GameButton
+              tone="normal"
+
               disabled={!offer.affordable}
               onClick={() => perform({ kind: "buy", offerIndex: offer.offerIndex })}
             >
               {offer.sold ? t.shop.sold : offer.affordable ? t.shop.buy : t.shop.notEnoughPp}
-            </Button>
+            </GameButton>
           </li>
         ))}
       </ul>
       <Actions>
-        <Button
-          variant="secondary"
-          size="game"
+        <GameButton
+          tone="normal"
+
           disabled={game.run.pp < rerollPrice}
           onClick={() => perform({ kind: "reroll" })}
         >
           {t.shop.reroll(rerollPrice)}
-        </Button>
-        <Button size="game" autoFocus onClick={() => perform({ kind: "nextStage" })}>
+        </GameButton>
+        <GameButton autoFocus onClick={() => perform({ kind: "nextStage" })}>
           {t.shop.nextStage}
-        </Button>
+        </GameButton>
       </Actions>
     </GameDialog>
   );
@@ -88,26 +92,27 @@ export function ReviveModal({ game, t, perform }: Props<"reviveChoice">) {
       <ul className="m-0 flex w-[min(420px,100%)] list-none flex-col gap-2 p-0">
         {reviveOptions(game.run, t).map((option) => (
           <li key={option.module}>
-            <Button
-              variant="secondary"
-              size="game"
+            <GameButton
+              tone="normal"
+
               className="w-full justify-between"
               data-silent
               onClick={() => perform({ kind: "revive", module: option.module })}
             >
-              <span>
+              <span className="flex items-center gap-2">
+                <ModuleImage module={option.module} name="" className="size-7" />
                 {option.name}
                 <span className="ml-1 text-gold tabular-nums">{t.count(option.count)}</span>
               </span>
               <span className="font-bold text-success">{t.revive.restoresTo(option.hp, option.maxHp)}</span>
-            </Button>
+            </GameButton>
           </li>
         ))}
       </ul>
       <Actions>
-        <Button variant="secondary" size="game" onClick={() => perform({ kind: "giveUp" })}>
+        <GameButton tone="normal" onClick={() => perform({ kind: "giveUp" })}>
           {t.revive.giveUp}
-        </Button>
+        </GameButton>
       </Actions>
     </GameDialog>
   );

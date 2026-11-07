@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import type { Game } from "../logic/types";
 import { drawGame } from "../render/draw";
 import { boardPx, readBoardColors } from "../render/style";
+import { useSprites } from "./sprites";
 
 export function Board({ game }: { game: Game }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -13,12 +14,14 @@ export function Board({ game }: { game: Game }) {
     return readBoardColors((name) => style.getPropertyValue(name));
   });
 
+  const { images } = useSprites();
+
   useLayoutEffect(() => {
     const ctx = ref.current?.getContext("2d");
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawGame(ctx, game, colors);
-  }, [game, dpr, colors]);
+    drawGame(ctx, game, colors, images);
+  }, [game, dpr, colors, images]);
 
   return (
     <canvas ref={ref} width={size * dpr} height={size * dpr} className="block" style={{ width: size, height: size }} />

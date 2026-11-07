@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
 import type { Messages } from "../i18n/messages";
 import type { Game } from "../logic/types";
+import { GameButton } from "./GameButton";
 import { ModuleChips } from "./Hud";
 import { Stat, Stats } from "./Stats";
 import { describeModules } from "./view";
@@ -20,12 +20,12 @@ export function TitleScreen({ t, onStart, onOpenSettings }: TitleProps) {
       <h1 className="m-0 text-6xl tracking-widest text-highlight [text-shadow:0_0_24px_rgb(14_165_233/0.6)]">
         {t.title}
       </h1>
-      <Button size="hero" autoFocus onClick={onStart}>
+      <GameButton size="hero" autoFocus onClick={onStart}>
         {t.startGame}
-      </Button>
-      <Button variant="secondary" size="game" onClick={onOpenSettings}>
+      </GameButton>
+      <GameButton tone="normal" onClick={onOpenSettings}>
         {TITLE_SETTINGS_LABEL}
-      </Button>
+      </GameButton>
     </section>
   );
 }
@@ -58,16 +58,16 @@ export function GameOverScreen({ game, t, onRetry, onTitle, onOpenSettings }: Ga
         </Stat>
       </Stats>
       <div className="flex justify-center gap-3">
-        <Button variant="secondary" size="game" onClick={onTitle}>
+        <GameButton tone="normal" onClick={onTitle}>
           {g.toTitle}
-        </Button>
-        <Button size="game" autoFocus onClick={onRetry}>
+        </GameButton>
+        <GameButton autoFocus onClick={onRetry}>
           {g.retry}
-        </Button>
+        </GameButton>
       </div>
-      <Button variant="secondary" size="game" onClick={onOpenSettings}>
+      <GameButton tone="normal" onClick={onOpenSettings}>
         {t.settings.openOutsideStage}
-      </Button>
+      </GameButton>
     </section>
   );
 }

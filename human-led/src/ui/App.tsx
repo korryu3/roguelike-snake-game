@@ -1,5 +1,6 @@
 import { type MouseEvent, useEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { AudioPlayer } from "../audio/player";
 import type { Tuning } from "../config";
@@ -58,39 +59,41 @@ export function App({ session, audio, tuningStorage, preferencesStorage, initial
 
   const screen = screenOf(view, game);
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-3" onClick={playButtonSound}>
-      {screen === "title" && <TitleScreen t={t} onStart={session.startNewRun} onOpenSettings={toggleMenu} />}
-      {screen === "gameOver" && game.phase === "gameOver" && (
-        <GameOverScreen
-          game={game}
-          t={t}
-          onRetry={session.startNewRun}
-          onTitle={session.goToTitle}
-          onOpenSettings={toggleMenu}
-        />
-      )}
-      {screen === "stage" && <StageView game={game} t={t} session={session} onOpenSettings={toggleMenu} />}
-      <p className="fixed right-4 bottom-3 m-0 text-sm text-muted-foreground">{t.controls}</p>
-      {view.menuOpen && (
-        <SettingsMenu
-          t={t}
-          preferences={preferences}
-          returnsToStage={menuReturnsToStage(view, game)}
-          onChange={changePreferences}
-          onSfxPreview={() => audio.play("pickup")}
-          onClose={toggleMenu}
-        />
-      )}
-      {view.panelOpen && (
-        <TuningPanel
-          draft={draft}
-          running={game.run.tuning}
-          saved={saved}
-          onChange={changeDraft}
-          onRestart={session.restart}
-        />
-      )}
-    </main>
+    <TooltipProvider>
+      <main className="flex min-h-screen flex-col items-center justify-center gap-3" onClick={playButtonSound}>
+        {screen === "title" && <TitleScreen t={t} onStart={session.startNewRun} onOpenSettings={toggleMenu} />}
+        {screen === "gameOver" && game.phase === "gameOver" && (
+          <GameOverScreen
+            game={game}
+            t={t}
+            onRetry={session.startNewRun}
+            onTitle={session.goToTitle}
+            onOpenSettings={toggleMenu}
+          />
+        )}
+        {screen === "stage" && <StageView game={game} t={t} session={session} onOpenSettings={toggleMenu} />}
+        <p className="fixed right-4 bottom-3 m-0 text-sm text-muted-foreground">{t.controls}</p>
+        {view.menuOpen && (
+          <SettingsMenu
+            t={t}
+            preferences={preferences}
+            returnsToStage={menuReturnsToStage(view, game)}
+            onChange={changePreferences}
+            onSfxPreview={() => audio.play("pickup")}
+            onClose={toggleMenu}
+          />
+        )}
+        {view.panelOpen && (
+          <TuningPanel
+            draft={draft}
+            running={game.run.tuning}
+            saved={saved}
+            onChange={changeDraft}
+            onRestart={session.restart}
+          />
+        )}
+      </main>
+    </TooltipProvider>
   );
 }
 
