@@ -69,6 +69,12 @@ export function revive(game: Game, module: ModuleId): StepResult {
   };
 }
 
+/** ステージ中だけ止められる */
+export function pause(game: Game): StepResult {
+  if (game.phase !== "playing") return { game, events: [] };
+  return { game: { ...game, phase: "paused" }, events: [] };
+}
+
 export function giveUp(game: Game): StepResult {
   if (game.phase !== "reviveChoice") return { game, events: [] };
   return { game: { phase: "gameOver", run: game.run, cause: "hp" }, events: [] };
@@ -82,9 +88,20 @@ export function step(game: Game, input: readonly Direction[], elapsedMs: number)
       return { game: startPlaying(game, input), events: [] };
     case "playing":
       return checkTimeUp(advance(enqueue(game, input), elapsedMs));
+    case "paused":
+      return { game: resume(game, input), events: [] };
     default:
       return { game, events: [] };
   }
+}
+
+/** 真後ろ以外の方向キーで再開する。ぶつかって止まっているなら、動き出すときにその方向を使う */
+function resume(game: Extract<Game, { phase: "paused" }>, input: readonly Direction[]): Game {
+  const direction = input.find((d) => d !== OPPOSITE[game.movement.direction]);
+  if (direction === undefined) return game;
+  const { movement } = game;
+  const resumed = movement.motion.kind === "stunned" ? { ...movement, queuedInputs: [direction] } : { ...movement, direction, queuedInputs: [] };
+  return { phase: "playing", run: game.run, stage: game.stage, movement: resumed };
 }
 
 function checkTimeUp({ game, events }: StepResult): StepResult {

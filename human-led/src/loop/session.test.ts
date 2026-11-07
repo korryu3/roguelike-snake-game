@@ -82,6 +82,49 @@ describe("createSession", () => {
     });
   });
 
+  describe("設定メニュー", () => {
+    const playingSession = () => {
+      const session = createSession(seeds(1), TEST_TUNING);
+      session.command({ kind: "direction", direction: "up" });
+      session.advance(0);
+      return session;
+    };
+
+    test("ステージ中に開くと止まり、閉じても止まったまま", () => {
+      const session = playingSession();
+      session.command({ kind: "toggleMenu" });
+      expect(session.menuOpen.getSnapshot()).toBe(true);
+      expect(session.store.getSnapshot().phase).toBe("paused");
+      session.command({ kind: "toggleMenu" });
+      expect(session.menuOpen.getSnapshot()).toBe(false);
+      session.advance(1_000);
+      expect(session.store.getSnapshot().phase).toBe("paused");
+    });
+
+    test("開いているあいだは、方向キーも時間も無視する", () => {
+      const session = playingSession();
+      session.command({ kind: "toggleMenu" });
+      const paused = session.store.getSnapshot();
+      session.command({ kind: "direction", direction: "left" });
+      session.advance(1_000);
+      expect(session.store.getSnapshot()).toBe(paused);
+      session.command({ kind: "toggleMenu" });
+      session.advance(0);
+      expect(session.store.getSnapshot().phase).toBe("paused");
+      session.command({ kind: "direction", direction: "left" });
+      session.advance(0);
+      expect(session.store.getSnapshot()).toMatchObject({ phase: "playing", movement: { direction: "left" } });
+    });
+
+    test("ステージ中以外では、開いてもゲームは変わらない", () => {
+      const game = cleared();
+      const session = createSession(seeds(1), TEST_TUNING, () => game);
+      session.command({ kind: "toggleMenu" });
+      expect(session.menuOpen.getSnapshot()).toBe(true);
+      expect(session.store.getSnapshot()).toBe(game);
+    });
+  });
+
   describe("画面の操作", () => {
     const sessionAt = (game: Game) => createSession(seeds(1), DEFAULT_TUNING, () => game);
     const shopWith = (pp: number) => openShop(cleared({ pp })).game;

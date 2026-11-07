@@ -22,6 +22,14 @@ export const CONFIG = {
   heartWithBatteryChance: 0.03,
 } as const;
 
+/** 音量の既定値。プレイヤーが設定メニューで変え、ブラウザに保存する。調整パネルには出さない */
+export const AUDIO = {
+  bgmVolume: 0.3,
+  sfxVolume: 0.6,
+  /** クリアとゲームオーバーのあいだは、BGMをこの割合に下げる */
+  duckRatio: 0.5,
+} as const;
+
 export type Config = { readonly [K in keyof typeof CONFIG]: number };
 
 export type ModuleSpec = {

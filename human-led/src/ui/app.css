@@ -328,11 +328,33 @@ body {
   font-weight: 700;
 }
 
-.sound-toggle {
+.settings-open {
   position: fixed;
-  left: 16px;
-  bottom: 12px;
+  top: 12px;
+  right: 16px;
   font-size: 14px;
+}
+
+.settings {
+  min-width: min(360px, calc(100vw - 32px));
+}
+
+.volume {
+  display: grid;
+  grid-template-columns: 7em 1fr 3.5em;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.volume input {
+  width: 100%;
+  accent-color: #0ea5e9;
+}
+
+.volume-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .controls {

@@ -1,7 +1,7 @@
 import { type MouseEvent, useEffect, useState, useSyncExternalStore } from "react";
 import { bgmLevel } from "../audio/cues";
-import type { MuteStorage } from "../audio/mute";
 import type { AudioPlayer } from "../audio/player";
+import type { Volumes, VolumeStorage } from "../audio/volume";
 import type { Tuning } from "../config";
 import type { Lang, LangStorage } from "../i18n/lang";
 import { MESSAGES, type Messages } from "../i18n/messages";
@@ -11,6 +11,7 @@ import type { TuningStorage } from "../tuning/storage";
 import { Board } from "./Board";
 import { Hud } from "./Hud";
 import { ClearModal, ReviveModal, ShopModal } from "./Modals";
+import { SettingsMenu } from "./SettingsMenu";
 import { GameOverScreen, TitleScreen } from "./Screens";
 import { TuningPanel } from "./TuningPanel";
 import "./app.css";
@@ -20,17 +21,18 @@ type Props = {
   tuningStorage: TuningStorage;
   langStorage: LangStorage;
   audio: AudioPlayer;
-  muteStorage: MuteStorage;
+  volumeStorage: VolumeStorage;
 };
 
-export function App({ session, tuningStorage, langStorage, audio, muteStorage }: Props) {
+export function App({ session, tuningStorage, langStorage, audio, volumeStorage }: Props) {
   const game = useSyncExternalStore(session.store.subscribe, session.store.getSnapshot);
   const panelOpen = useSyncExternalStore(session.panelOpen.subscribe, session.panelOpen.getSnapshot);
+  const menuOpen = useSyncExternalStore(session.menuOpen.subscribe, session.menuOpen.getSnapshot);
   const [onTitle, setOnTitle] = useState(true);
   const [lang, setLang] = useState<Lang>(() => langStorage.load());
   const [draft, setDraft] = useState<Tuning>(() => game.run.tuning);
   const [saved, setSaved] = useState(true);
-  const [muted, setMuted] = useState(() => muteStorage.load());
+  const [volumes, setVolumes] = useState<Volumes>(() => volumeStorage.load());
   const t = MESSAGES[lang];
 
   useEffect(() => {
@@ -50,11 +52,12 @@ export function App({ session, tuningStorage, langStorage, audio, muteStorage }:
     setDraft(tuning);
     setSaved(tuningStorage.save(tuning));
   };
-  const toggleMuted = () => {
-    setMuted(!muted);
-    audio.setMuted(!muted);
-    muteStorage.save(!muted);
+  const changeVolumes = (next: Volumes) => {
+    setVolumes(next);
+    audio.setVolumes(next);
+    volumeStorage.save(next);
   };
+  const toggleMenu = () => session.command({ kind: "toggleMenu" });
   // ボタンの音は、画面のボタンをまとめて鳴らす。自分の音があるボタン（data-silent）と調整パネルは除く
   const playButtonSound = (event: MouseEvent) => {
     if (!(event.target instanceof Element)) return;
@@ -77,9 +80,19 @@ export function App({ session, tuningStorage, langStorage, audio, muteStorage }:
         <StageView game={game} t={t} session={session} />
       )}
       <p className="controls">{t.controls}</p>
-      <button type="button" className="button sound-toggle" aria-pressed={!muted} onClick={toggleMuted}>
-        {muted ? t.sound.off : t.sound.on}
+      <button type="button" className="button settings-open" onClick={toggleMenu}>
+        {t.settings.open}
       </button>
+      {menuOpen && (
+        <SettingsMenu
+          t={t}
+          volumes={volumes}
+          inStage={!onTitle && (game.phase === "paused" || game.phase === "awaitingStart")}
+          onVolumesChange={changeVolumes}
+          onSfxPreview={() => audio.play("pickup")}
+          onClose={toggleMenu}
+        />
+      )}
       {panelOpen && (
         <TuningPanel draft={draft} running={game.run.tuning} saved={saved} onChange={changeDraft} onRestart={session.restart} />
       )}
@@ -95,8 +108,8 @@ function StageView({ game, t, session }: { game: Game; t: Messages; session: Ses
       <div className="board">
         <Board game={game} />
       </div>
-      <p className="board-hint" style={{ visibility: game.phase === "awaitingStart" ? "visible" : "hidden" }}>
-        {t.pressToStart}
+      <p className="board-hint" style={{ visibility: game.phase === "awaitingStart" || game.phase === "paused" ? "visible" : "hidden" }}>
+        {game.phase === "paused" ? t.pressToResume : t.pressToStart}
       </p>
       {game.phase === "cleared" && <ClearModal game={game} t={t} perform={perform} />}
       {game.phase === "shop" && <ShopModal game={game} t={t} perform={perform} />}

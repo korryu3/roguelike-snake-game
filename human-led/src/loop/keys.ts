@@ -2,7 +2,8 @@ import type { Direction } from "../logic/types";
 
 export type KeyCommand =
   | { readonly kind: "direction"; readonly direction: Direction }
-  | { readonly kind: "togglePanel" };
+  | { readonly kind: "togglePanel" }
+  | { readonly kind: "toggleMenu" };
 
 const move = (direction: Direction): KeyCommand => ({ kind: "direction", direction });
 
@@ -16,6 +17,7 @@ const KEY_COMMANDS: Readonly<Record<string, KeyCommand>> = {
   ArrowDown: move("down"),
   ArrowRight: move("right"),
   KeyT: { kind: "togglePanel" },
+  Escape: { kind: "toggleMenu" },
 };
 
 /** `KeyboardEvent.code`を受け取る */

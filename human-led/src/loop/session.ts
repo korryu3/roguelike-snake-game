@@ -1,5 +1,5 @@
 import { DEFAULT_TUNING, type Tuning } from "../config";
-import { giveUp, nextStage, revive, startRun, step } from "../logic/game";
+import { giveUp, nextStage, pause, revive, startRun, step } from "../logic/game";
 import { buyModule, openShop, reroll } from "../logic/shop";
 import type { Direction, Game, GameEvent, ModuleId, StepResult } from "../logic/types";
 import type { KeyCommand } from "./keys";
@@ -23,6 +23,8 @@ export type Session = {
   readonly store: ReadonlyStore<Game>;
   /** 調整パネルを開いているあいだは、ゲームを止める */
   readonly panelOpen: ReadonlyStore<boolean>;
+  /** 設定メニュー。ステージ中に開くとゲームを止める。閉じても、方向キーを押すまで止まったまま */
+  readonly menuOpen: ReadonlyStore<boolean>;
   readonly command: (command: KeyCommand) => void;
   readonly advance: (elapsedMs: number) => void;
   /** その局面でできない操作は何も変えない */
@@ -58,6 +60,7 @@ export function createSession(
   const newRun = (tuning: Tuning) => newGame(newSeed(), tuning);
   const store = createStore(newRun(initialTuning));
   const panelOpen = createStore(false);
+  const menuOpen = createStore(false);
   let pressed: Direction[] = [];
   const listeners = new Set<(change: Change) => void>();
   const commit = (next: Game, events: readonly GameEvent[]) => {
@@ -68,13 +71,23 @@ export function createSession(
   return {
     store,
     panelOpen,
+    menuOpen,
     command: (command) => {
       if (command.kind === "togglePanel") return panelOpen.set(!panelOpen.getSnapshot());
-      if (panelOpen.getSnapshot()) return;
+      if (command.kind === "toggleMenu") {
+        const opening = !menuOpen.getSnapshot();
+        menuOpen.set(opening);
+        if (opening) {
+          const { game, events } = pause(store.getSnapshot());
+          if (game !== store.getSnapshot()) commit(game, events);
+        }
+        return;
+      }
+      if (panelOpen.getSnapshot() || menuOpen.getSnapshot()) return;
       pressed.push(command.direction);
     },
     advance: (elapsedMs) => {
-      if (panelOpen.getSnapshot()) return;
+      if (panelOpen.getSnapshot() || menuOpen.getSnapshot()) return;
       const input = pressed;
       pressed = [];
       const { game, events } = step(store.getSnapshot(), input, elapsedMs);
