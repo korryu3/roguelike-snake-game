@@ -8,6 +8,7 @@ import { MESSAGES, type Messages } from "../i18n/messages";
 import type { Game } from "../logic/types";
 import type { Session } from "../loop/session";
 import type { TuningStorage } from "../tuning/storage";
+import { boardPx } from "../render/style";
 import { Board } from "./Board";
 import { Hud } from "./Hud";
 import { ClearModal, ReviveModal, ShopModal } from "./Modals";
@@ -72,6 +73,12 @@ export function App({ session, tuningStorage, langStorage, audio, volumeStorage 
 
   return (
     <main className="app" onClick={playButtonSound}>
+      {/* 盤面と同じ幅の列の右上。ステージ中は時間制限の真上に来る */}
+      <div className="top-bar" style={{ width: boardPx(game.run.tuning.config.boardSize) }}>
+        <button type="button" className="button settings-open" onClick={toggleMenu}>
+          {t.settings.open}
+        </button>
+      </div>
       {onTitle ? (
         <TitleScreen t={t} lang={lang} onLangChange={changeLang} onStart={newRun} />
       ) : game.phase === "gameOver" ? (
@@ -80,9 +87,6 @@ export function App({ session, tuningStorage, langStorage, audio, volumeStorage 
         <StageView game={game} t={t} session={session} />
       )}
       <p className="controls">{t.controls}</p>
-      <button type="button" className="button settings-open" onClick={toggleMenu}>
-        {t.settings.open}
-      </button>
       {menuOpen && (
         <SettingsMenu
           t={t}
