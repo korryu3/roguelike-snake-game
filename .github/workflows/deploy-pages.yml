@@ -20,12 +20,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # nodeの版はリポジトリ直下の.node-version、pnpmとVite+の版はhuman-ledのpackage.jsonで決める。依存も入れる
+      # node、pnpm、Vite+の版はhuman-ledのpackage.jsonで決める。依存も入れる
       - uses: voidzero-dev/setup-vp@v1.22.0
         with:
           working-directory: human-led
           version-file: package.json
-          node-version-file: ../.node-version
+          node-version-file: package.json
 
       - name: Test
         working-directory: human-led

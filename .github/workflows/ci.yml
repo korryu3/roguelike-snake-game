@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - "human-led/**"
-      - ".node-version"
       - ".github/workflows/ci.yml"
 
 permissions:
@@ -23,12 +22,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # nodeの版はリポジトリ直下の.node-version、pnpmとVite+の版はpackage.jsonで決める。依存も入れる
+      # node、pnpm、Vite+の版はpackage.jsonで決める。依存も入れる
       - uses: voidzero-dev/setup-vp@v1.22.0
         with:
           working-directory: human-led
           version-file: package.json
-          node-version-file: ../.node-version
+          node-version-file: package.json
 
       # 整形の検査、lint、型検査
       - run: vp check
