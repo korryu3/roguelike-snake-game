@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "human-led/**"
+      - "mise.toml"
       - ".github/workflows/ci.yml"
 
 permissions:
@@ -22,15 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: human-led/package-lock.json
+      # nodeとpnpmの版は、リポジトリ直下のmise.tomlで決める
+      - uses: jdx/mise-action@v5
 
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run fmt:check
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run fmt:check
+      - run: pnpm run typecheck
+      - run: pnpm test
+      - run: pnpm run build
