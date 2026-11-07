@@ -131,7 +131,7 @@ const ja: Messages = {
 };
 
 const en: Messages = {
-  title: "RoguelikeSnakeGame",
+  title: "RLSG",
   startGame: "Start Game",
   language: "Language",
   controls: "Move with WASD / Arrow keys",
