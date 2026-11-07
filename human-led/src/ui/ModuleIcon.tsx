@@ -29,8 +29,15 @@ export function ModuleImage({ module, name, className }: Props) {
   return <img src={url} alt={name} className={cn("size-10 object-contain", className)} />;
 }
 
+type BadgeProps = Props & {
+  readonly count: number;
+  /** 使い切るモジュールを全部使ったら、一覧に残したまま薄暗くする */
+  readonly usedUp: boolean;
+};
+
 /** ステージ中のHUD用。画像だけを出し、重ねた数を右下に小さく出し、マウスを載せると名前を出す */
-export function ModuleBadge({ module, name, count }: Props & { readonly count: number }) {
+export function ModuleBadge({ module, name, count, usedUp }: BadgeProps) {
+  const dim = usedUp && "opacity-35 grayscale";
   const url = useModuleImage(module);
   const countLabel = count > 1 && (
     <span className="absolute -right-1 -bottom-1 rounded-full bg-background px-1 text-[11px] leading-tight text-gold tabular-nums">
@@ -39,7 +46,7 @@ export function ModuleBadge({ module, name, count }: Props & { readonly count: n
   );
   if (!url) {
     return (
-      <span className="rounded-full border bg-secondary px-2 py-0.5 text-[13px]">
+      <span className={cn("rounded-full border bg-secondary px-2 py-0.5 text-[13px]", dim)}>
         {name}
         {count > 1 && <span className="ml-1 text-gold tabular-nums">×{count}</span>}
       </span>
@@ -48,7 +55,7 @@ export function ModuleBadge({ module, name, count }: Props & { readonly count: n
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="relative inline-block" tabIndex={0}>
+        <span className={cn("relative inline-block", dim)} tabIndex={0}>
           <img src={url} alt={name} className="size-7 object-contain" />
           {countLabel}
         </span>

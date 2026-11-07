@@ -7,7 +7,7 @@ import { boardPx } from "../render/style";
 import { formatRemainingTime } from "./format";
 import { ModuleBadge, ModuleImage } from "./ModuleIcon";
 import { useSprites } from "./sprites";
-import { describeModules, type ModuleLine } from "./view";
+import { describeHudModules, type ModuleLine } from "./view";
 
 export function Hud({ game, t }: { game: Game; t: Messages }) {
   const { run } = game;
@@ -16,7 +16,7 @@ export function Hud({ game, t }: { game: Game; t: Messages }) {
   const stage = "stage" in game ? game.stage : null;
   const eaten = stage?.batteriesEaten ?? 0;
   const progress = Math.min(1, eaten / config.batteriesToGoal);
-  const modules = describeModules(run.purchased, t);
+  const modules = describeHudModules(run, t);
   const width = boardPx(config.boardSize);
   return (
     <div className="flex flex-col gap-2" style={{ width }}>
@@ -34,7 +34,9 @@ export function Hud({ game, t }: { game: Game; t: Messages }) {
         {modules.length === 0 ? (
           <span className="text-muted-foreground">{t.hud.noModules}</span>
         ) : (
-          modules.map((m) => <ModuleBadge key={m.module} module={m.module} name={m.name} count={m.count} />)
+          modules.map((m) => (
+            <ModuleBadge key={m.module} module={m.module} name={m.name} count={m.count} usedUp={m.usedUp} />
+          ))
         )}
       </div>
     </div>
