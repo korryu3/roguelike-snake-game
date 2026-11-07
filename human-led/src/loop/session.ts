@@ -1,7 +1,7 @@
 import { DEFAULT_TUNING, type Tuning } from "../config";
 import { giveUp, nextStage, revive, startRun, step } from "../logic/game";
 import { buyModule, openShop, reroll } from "../logic/shop";
-import type { Direction, Game, ModuleId, StepResult } from "../logic/types";
+import type { Direction, Game, GameEvent, ModuleId, StepResult } from "../logic/types";
 import type { KeyCommand } from "./keys";
 import { createStore, type Store } from "./store";
 
@@ -16,6 +16,9 @@ export type ScreenAction =
   | { readonly kind: "revive"; readonly module: ModuleId }
   | { readonly kind: "giveUp" };
 
+/** 状態が変わるたびに知らせる中身。音を鳴らすのに使う */
+export type Change = { readonly prev: Game; readonly next: Game; readonly events: readonly GameEvent[] };
+
 export type Session = {
   readonly store: ReadonlyStore<Game>;
   /** 調整パネルを開いているあいだは、ゲームを止める */
@@ -26,6 +29,8 @@ export type Session = {
   readonly perform: (action: ScreenAction) => void;
   /** 局面によらず、渡した数値で新しいランを始める */
   readonly restart: (tuning: Tuning) => void;
+  /** 戻り値を呼ぶと、知らせるのをやめる */
+  readonly onChange: (listener: (change: Change) => void) => () => void;
 };
 
 function applyAction(game: Game, action: ScreenAction): StepResult {
@@ -54,6 +59,12 @@ export function createSession(
   const store = createStore(newRun(initialTuning));
   const panelOpen = createStore(false);
   let pressed: Direction[] = [];
+  const listeners = new Set<(change: Change) => void>();
+  const commit = (next: Game, events: readonly GameEvent[]) => {
+    const prev = store.getSnapshot();
+    store.set(next);
+    for (const listener of listeners) listener({ prev, next, events });
+  };
   return {
     store,
     panelOpen,
@@ -66,14 +77,20 @@ export function createSession(
       if (panelOpen.getSnapshot()) return;
       const input = pressed;
       pressed = [];
-      store.set(step(store.getSnapshot(), input, elapsedMs).game);
+      const { game, events } = step(store.getSnapshot(), input, elapsedMs);
+      commit(game, events);
     },
     perform: (action) => {
-      store.set(applyAction(store.getSnapshot(), action).game);
+      const { game, events } = applyAction(store.getSnapshot(), action);
+      commit(game, events);
     },
     restart: (tuning) => {
-      store.set(newRun(tuning));
+      commit(newRun(tuning), []);
       panelOpen.set(false);
+    },
+    onChange: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
     },
   };
 }

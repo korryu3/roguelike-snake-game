@@ -328,6 +328,13 @@ body {
   font-weight: 700;
 }
 
+.sound-toggle {
+  position: fixed;
+  left: 16px;
+  bottom: 12px;
+  font-size: 14px;
+}
+
 .controls {
   position: fixed;
   right: 16px;
