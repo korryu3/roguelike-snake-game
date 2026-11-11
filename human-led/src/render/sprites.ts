@@ -28,6 +28,10 @@ export const SPRITE_FILES = {
   moduleWallImmunity: "module-wall-immunity.png",
   moduleMaxHp: "module-max-hp.png",
   moduleDoublePpBattery: "double-battery.png",
+  moduleBodyCut: "module-body-cut.png",
+  moduleFasterMovement: "module-faster-movement.png",
+  moduleSlowerMovement: "module-slower-movement.png",
+  moduleExtraModuleChoice: "module-extra-module-choice.png",
 } as const;
 
 export type SpriteKey = keyof typeof SPRITE_FILES;
