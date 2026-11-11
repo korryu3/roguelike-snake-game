@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
@@ -11,8 +11,6 @@ import { GameDialog } from "./GameDialog";
 type Props = {
   readonly t: Messages;
   readonly preferences: Preferences;
-  /** 閉じたらステージに戻るときは「再開」、それ以外では「閉じる」 */
-  readonly returnsToStage: boolean;
   readonly onChange: (preferences: Preferences) => void;
   /** 効果音の音量を決めたあと、聞いて確かめられるように鳴らす */
   readonly onSfxPreview: () => void;
@@ -23,7 +21,7 @@ type Props = {
 
 const ROW = "grid w-full grid-cols-[7em_1fr_3.5em] items-center gap-3";
 
-export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPreview, onClose, onGiveUp }: Props) {
+export function SettingsMenu({ t, preferences, onChange, onSfxPreview, onClose, onGiveUp }: Props) {
   const { lang, volumes } = preferences;
   const setVolumes = (next: Partial<Preferences["volumes"]>) =>
     onChange({ ...preferences, volumes: { ...volumes, ...next } });
@@ -59,26 +57,28 @@ export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPr
           ))}
         </div>
       </div>
-      <div className="flex justify-center gap-3">
-        <GameButton autoFocus onClick={onClose}>
-          {returnsToStage ? t.settings.resume : t.settings.close}
-        </GameButton>
-      </div>
-      {onGiveUp && <GiveUp t={t} onGiveUp={onGiveUp} />}
+      <Actions t={t} onClose={onClose} onGiveUp={onGiveUp} />
     </GameDialog>
   );
 }
 
-/** 押し間違えるとランが終わるので、「再開」から離して置き、もう一度確かめる */
-function GiveUp({ t, onGiveUp }: { t: Messages; onGiveUp: () => void }) {
+type ActionsProps = {
+  readonly t: Messages;
+  readonly onClose: () => void;
+  readonly onGiveUp?: (() => void) | undefined;
+};
+
+/** 「閉じる」と、ステージ中だけ「諦める」を並べる。諦めるとランが終わるので、押したらその場でもう一度確かめる */
+function Actions({ t, onClose, onGiveUp }: ActionsProps) {
   const [confirming, setConfirming] = useState(false);
-  return (
-    <div className="flex w-full flex-col items-center gap-2 border-t border-border pt-3">
-      {confirming ? (
-        <>
+  if (onGiveUp && confirming) {
+    return (
+      <ActionRow>
+        {/* 問いかけは、答えのボタン2つの真ん中に置く */}
+        <div className="flex flex-col items-center gap-2">
           <p className="m-0">{t.settings.confirmGiveUp}</p>
-          <div className="flex gap-3">
-            <GameButton tone="normal" onClick={() => setConfirming(false)}>
+          <div className="flex gap-2">
+            <GameButton tone="normal" autoFocus onClick={() => setConfirming(false)}>
               {t.settings.keepPlaying}
             </GameButton>
             {/* ゲームオーバーの音が鳴るので、ボタンの音は鳴らさない */}
@@ -86,12 +86,35 @@ function GiveUp({ t, onGiveUp }: { t: Messages; onGiveUp: () => void }) {
               {t.settings.giveUp}
             </GameButton>
           </div>
-        </>
-      ) : (
+        </div>
+      </ActionRow>
+    );
+  }
+  const close = (
+    <GameButton autoFocus onClick={onClose}>
+      {t.settings.close}
+    </GameButton>
+  );
+  // 「閉じる」だけのとき（タイトル・ゲームオーバー）は、ダイアログの真ん中に置く
+  if (!onGiveUp) return <div className="flex justify-center">{close}</div>;
+  return (
+    <ActionRow>
+      <div className="flex gap-2">
+        {close}
         <GameButton tone="normal" className="text-destructive" onClick={() => setConfirming(true)}>
           {t.settings.giveUp}
         </GameButton>
-      )}
+      </div>
+    </ActionRow>
+  );
+}
+
+/** 上の設定の行と同じ列に入れ、言語のボタンと左端をそろえる */
+function ActionRow({ children }: { children: ReactNode }) {
+  return (
+    <div className={ROW}>
+      <span />
+      <div className="col-span-2 flex flex-col items-start gap-2">{children}</div>
     </div>
   );
 }

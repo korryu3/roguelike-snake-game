@@ -7,7 +7,7 @@ import type { Tuning } from "../config";
 import { MESSAGES, type Messages } from "../i18n/messages";
 import type { Game } from "../logic/types";
 import type { Session } from "../loop/session";
-import { menuReturnsToStage, screenOf } from "../loop/view";
+import { menuOffersGiveUp, screenOf } from "../loop/view";
 import type { Preferences, PreferencesStorage } from "../preferences/storage";
 import type { TuningStorage } from "../tuning/storage";
 import { Board } from "./Board";
@@ -71,11 +71,10 @@ export function App({ session, audio, tuningStorage, preferencesStorage, initial
           <SettingsMenu
             t={t}
             preferences={preferences}
-            returnsToStage={menuReturnsToStage(view, game)}
             onChange={changePreferences}
             onSfxPreview={() => audio.play("pickup")}
             onClose={toggleMenu}
-            onGiveUp={menuReturnsToStage(view, game) ? () => session.perform({ kind: "giveUp" }) : undefined}
+            onGiveUp={menuOffersGiveUp(view, game) ? () => session.perform({ kind: "giveUp" }) : undefined}
           />
         )}
         {view.panelOpen && (
