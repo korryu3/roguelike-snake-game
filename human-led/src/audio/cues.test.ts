@@ -34,6 +34,11 @@ describe("soundsFor", () => {
     expect(sounds(prev, tick(prev))).toEqual([]);
   });
 
+  it("体を切ったら、ダメージと同じ音", () => {
+    const game = begin("right");
+    expect(soundsFor(game, game, [{ type: "bodyCut" }])).toEqual(["damage"]);
+  });
+
   it("ゴールが出たら、ゴールの音も鳴る", () => {
     const prev = begin("right", { battery: AHEAD, batteriesEaten: CONFIG.batteriesToGoal - 1 });
     expect(sounds(prev, tick(prev))).toEqual(["pickup", "goal"]);

@@ -19,7 +19,11 @@ export type ModuleId =
   | "timeLimitBoostNextStage"
   | "wallDamageImmunity"
   | "maxHpPlus1"
-  | "doublePpBattery";
+  | "doublePpBattery"
+  | "bodyCut"
+  | "fasterMovement"
+  | "slowerMovement"
+  | "extraModuleChoice";
 
 export type RunState = {
   readonly length: number;
@@ -105,7 +109,8 @@ export type GameEvent =
   | { readonly type: "cleared" }
   | { readonly type: "hpDepleted" }
   | { readonly type: "timeUp" }
-  | { readonly type: "revived" };
+  | { readonly type: "revived" }
+  | { readonly type: "bodyCut" };
 
 export type StepResult = { readonly game: Game; readonly events: readonly GameEvent[] };
 

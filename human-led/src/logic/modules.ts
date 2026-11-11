@@ -7,6 +7,10 @@ export type Effects = {
   /** バッテリー1個で得るPPと伸びの倍率 */
   readonly batteryMultiplier: number;
   readonly doublePpBatteryChance: number;
+  /** 1マス進む間隔。移動速度アップ・ダウンの倍率で割る */
+  readonly moveIntervalMs: number;
+  /** モジュールの候補が1つ増える確率 */
+  readonly extraModuleChoiceChance: number;
 };
 
 export function effectsOf(modules: readonly ModuleId[], config: Config): Effects {
@@ -19,6 +23,11 @@ export function effectsOf(modules: readonly ModuleId[], config: Config): Effects
       count("timeLimitBoostNextStage") * config.timeLimitBoostMs,
     batteryMultiplier: 1 + count("doublePpAndGrowth"),
     doublePpBatteryChance: count("doublePpBattery") * config.doublePpBatteryChancePerStack,
+    extraModuleChoiceChance: count("extraModuleChoice") * config.extraModuleChoiceChancePerStack,
+    moveIntervalMs:
+      config.moveIntervalMs /
+      (config.fasterMovementMultiplier ** count("fasterMovement") *
+        config.slowerMovementMultiplier ** count("slowerMovement")),
   };
 }
 

@@ -45,7 +45,7 @@ export function ShopModal({ game, t, perform }: Props<"shop">) {
   return (
     <GameDialog title={t.shop.title}>
       <p className="m-0 text-lg font-bold">{t.shop.pp(game.run.pp)}</p>
-      <ul className="m-0 grid w-full list-none grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 p-0">
+      <ul className="m-0 grid w-full list-none grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3 p-0">
         {describeOffers(game, t).map((offer) => (
           <li
             key={offer.offerIndex}

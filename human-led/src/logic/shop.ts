@@ -1,13 +1,23 @@
 import { MODULE_IDS } from "../config";
 import { effectsOf } from "./modules";
-import { pickDistinct } from "./rng";
+import { nextFloat, pickDistinct } from "./rng";
 import type { Game, Offer, RunState, StepResult } from "./types";
 
 function drawOffers(run: RunState): [Offer[], RunState] {
-  const { config, modules: specs } = run.tuning;
+  const { modules: specs } = run.tuning;
   const buyable = MODULE_IDS.filter((id) => run.modules.filter((m) => m === id).length < specs[id].maxStack);
-  const [modules, rng] = pickDistinct(run.rng, buyable, config.shopOfferCount);
+  const [count, rngAfterRoll] = offerCount(run);
+  const [modules, rng] = pickDistinct(rngAfterRoll, buyable, count);
   return [modules.map((module) => ({ module, sold: false })), { ...run, rng }];
+}
+
+/** モジュール候補＋1を持っていなければ乱数を使わない。持っていないランの候補の出方を変えないため */
+function offerCount(run: RunState): [number, RunState["rng"]] {
+  const { config } = run.tuning;
+  const chance = effectsOf(run.modules, config).extraModuleChoiceChance;
+  if (chance <= 0) return [config.shopOfferCount, run.rng];
+  const [roll, rng] = nextFloat(run.rng);
+  return [config.shopOfferCount + (roll < chance ? 1 : 0), rng];
 }
 
 export function openShop(game: Game): StepResult {

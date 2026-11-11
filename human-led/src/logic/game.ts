@@ -160,7 +160,7 @@ function advance(game: Playing, elapsedMs: number): StepResult {
   if (motion.kind === "stunned") return { game: recover(timed, motion.remainingMs - elapsedMs), events: [] };
   const invincibleMs = Math.max(0, timed.movement.invincibleMs - elapsedMs);
   const sinceLastMoveMs = motion.sinceLastMoveMs + elapsedMs;
-  const { moveIntervalMs } = game.run.tuning.config;
+  const { moveIntervalMs } = effectsOf(game.run.modules, game.run.tuning.config);
   const due = sinceLastMoveMs >= moveIntervalMs;
   const ticked: Playing = {
     ...timed,
@@ -330,6 +330,8 @@ function obstacleAt({ stage, run }: Playing, cell: Cell): Obstacle | null {
 }
 
 function collide(game: Playing, obstacle: Obstacle): StepResult {
+  const cutModules = obstacle === "body" ? consumeOne(game.run.modules, "bodyCut") : null;
+  if (cutModules) return cutBody({ ...game, run: { ...game.run, modules: cutModules } });
   // 体はすり抜けられる。無敵時間中ならダメージもない
   if (game.movement.invincibleMs > 0 && obstacle === "body") return arrive(enter(game));
   if (game.movement.invincibleMs > 0) {
@@ -365,6 +367,17 @@ function collide(game: Playing, obstacle: Obstacle): StepResult {
     game: { ...game, run, movement: { ...game.movement, motion: stunned } },
     events: [collided],
   };
+}
+
+/** 頭が入ったマスから尻尾までを切り落とす。ダメージは受けず、止まらずに進む。残った体の長さがランの長さになる */
+function cutBody(game: Playing): StepResult {
+  const { body } = game.stage;
+  const head = neighbor(body[0], game.movement.direction);
+  const hitIndex = body.findIndex((b) => sameCell(b, head));
+  const cut: StageState["body"] = [head, ...body.slice(0, hitIndex)];
+  return arrive({ ...game, run: { ...game.run, length: cut.length }, stage: { ...game.stage, body: cut } }, [
+    { type: "bodyCut" },
+  ]);
 }
 
 /** 頭を向きの先のマスへ進める */

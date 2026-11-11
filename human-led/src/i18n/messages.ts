@@ -166,6 +166,23 @@ const ja: Messages = {
       name: "PP2倍のバッテリー",
       description: (c) => `${percent(c.doublePpBatteryChancePerStack)}の確率で、PPが2倍のバッテリーが出現`,
     },
+    bodyCut: {
+      name: "体の切断（1回）",
+      description: () => "長くなった体を短くできる。自分の体にぶつかると、そこから先が切れる（HPは減らない）",
+    },
+    fasterMovement: {
+      name: "移動速度アップ",
+      description: (c) => `スネークの移動スピードが${c.fasterMovementMultiplier}倍速くなる`,
+    },
+    slowerMovement: {
+      name: "移動速度ダウン",
+      description: (c) => `スネークの移動スピードが${c.slowerMovementMultiplier}倍に遅くなる`,
+    },
+    extraModuleChoice: {
+      name: "モジュール候補＋1",
+      description: (c) =>
+        `${percent(c.extraModuleChoiceChancePerStack)}の確率で、選べるモジュールが${c.shopOfferCount + 1}つになる`,
+    },
   },
 };
 
@@ -257,6 +274,23 @@ const en: Messages = {
     doublePpBattery: {
       name: "Double-PP Energy Cell",
       description: (c) => `${percent(c.doublePpBatteryChancePerStack)} chance that a double-PP Energy Cell appears`,
+    },
+    bodyCut: {
+      name: "Body Cut (Once)",
+      description: () => "Shortens your body: hit your own body to cut it off there (no HP lost)",
+    },
+    fasterMovement: {
+      name: "Faster Movement",
+      description: (c) => `The snake moves ${c.fasterMovementMultiplier}x faster`,
+    },
+    slowerMovement: {
+      name: "Slower Movement",
+      description: (c) => `The snake moves at ${c.slowerMovementMultiplier}x speed`,
+    },
+    extraModuleChoice: {
+      name: "Extra Module Choice",
+      description: (c) =>
+        `${percent(c.extraModuleChoiceChancePerStack)} chance to choose from ${c.shopOfferCount + 1} modules`,
     },
   },
 };
