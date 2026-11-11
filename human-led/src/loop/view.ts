@@ -18,7 +18,7 @@ export function screenOf(view: View, game: Game): Screen {
   return game.phase === "gameOver" ? "gameOver" : "stage";
 }
 
-/** 設定メニューを閉じたらステージに戻るか（ボタンを「再開」にするか） */
-export function menuReturnsToStage(view: View, game: Game): boolean {
+/** 設定メニューに「諦める」を出すか。ステージの開始待ちと止まっているときだけ出す */
+export function menuOffersGiveUp(view: View, game: Game): boolean {
   return screenOf(view, game) === "stage" && (game.phase === "awaitingStart" || game.phase === "paused");
 }

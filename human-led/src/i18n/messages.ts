@@ -15,7 +15,6 @@ export type Messages = {
   readonly settings: {
     readonly open: string;
     readonly title: string;
-    readonly resume: string;
     readonly close: string;
     readonly bgm: string;
     readonly sfx: string;
@@ -87,7 +86,6 @@ const ja: Messages = {
   settings: {
     open: "⏸ 設定",
     title: "設定",
-    resume: "再開",
     close: "閉じる",
     bgm: "BGM",
     sfx: "効果音",
@@ -179,7 +177,6 @@ const en: Messages = {
   settings: {
     open: "⏸ Settings",
     title: "Settings",
-    resume: "Resume",
     close: "Close",
     bgm: "Music",
     sfx: "Sound effects",

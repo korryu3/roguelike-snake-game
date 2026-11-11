@@ -11,8 +11,6 @@ import { GameDialog } from "./GameDialog";
 type Props = {
   readonly t: Messages;
   readonly preferences: Preferences;
-  /** 閉じたらステージに戻るときは「再開」、それ以外では「閉じる」 */
-  readonly returnsToStage: boolean;
   readonly onChange: (preferences: Preferences) => void;
   /** 効果音の音量を決めたあと、聞いて確かめられるように鳴らす */
   readonly onSfxPreview: () => void;
@@ -23,12 +21,16 @@ type Props = {
 
 const ROW = "grid w-full grid-cols-[7em_1fr_3.5em] items-center gap-3";
 
-export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPreview, onClose, onGiveUp }: Props) {
+export function SettingsMenu({ t, preferences, onChange, onSfxPreview, onClose, onGiveUp }: Props) {
   const { lang, volumes } = preferences;
   const setVolumes = (next: Partial<Preferences["volumes"]>) =>
     onChange({ ...preferences, volumes: { ...volumes, ...next } });
   return (
-    <GameDialog title={t.settings.title} className="w-[min(420px,calc(100vw-2rem))]">
+    <GameDialog
+      title={t.settings.title}
+      className="w-[min(420px,calc(100vw-2rem))]"
+      actions={<MenuActions t={t} onClose={onClose} onGiveUp={onGiveUp} />}
+    >
       <VolumeSlider
         id="volume-bgm"
         label={t.settings.bgm}
@@ -44,55 +46,71 @@ export function SettingsMenu({ t, preferences, returnsToStage, onChange, onSfxPr
       />
       <div className={ROW}>
         <span>{t.language}</span>
-        {/* 切り替えのボタンには、どちらの言語で遊んでいても、その言語自身の書き方で名前を出す */}
-        <div className="flex gap-2" role="group" aria-label={t.language}>
+        {/* 設定の値を選ぶ切り替え。操作のボタン（閉じる・諦める）とは見た目を分け、スライダーと同じ幅に収める */}
+        <div
+          className="grid grid-cols-2 overflow-hidden rounded-md border border-border"
+          role="group"
+          aria-label={t.language}
+        >
           {LANGS.map((l) => (
-            <GameButton
+            <button
               key={l}
-              tone="normal"
-              className={cn(l === lang && "border-highlight text-highlight")}
+              type="button"
               aria-pressed={l === lang}
+              className={cn(
+                "px-2 py-1 text-sm transition-colors",
+                l === lang
+                  ? "bg-highlight font-bold text-background"
+                  : "bg-secondary text-foreground/80 hover:brightness-125",
+              )}
               onClick={() => onChange({ ...preferences, lang: l })}
             >
+              {/* どちらの言語で遊んでいても、その言語自身の書き方で名前を出す */}
               {LANG_NAMES[l]}
-            </GameButton>
+            </button>
           ))}
         </div>
       </div>
-      <div className="flex justify-center gap-3">
-        <GameButton autoFocus onClick={onClose}>
-          {returnsToStage ? t.settings.resume : t.settings.close}
-        </GameButton>
-      </div>
-      {onGiveUp && <GiveUp t={t} onGiveUp={onGiveUp} />}
     </GameDialog>
   );
 }
 
-/** 押し間違えるとランが終わるので、「再開」から離して置き、もう一度確かめる */
-function GiveUp({ t, onGiveUp }: { t: Messages; onGiveUp: () => void }) {
+type ActionsProps = {
+  readonly t: Messages;
+  readonly onClose: () => void;
+  readonly onGiveUp?: (() => void) | undefined;
+};
+
+/** 「閉じる」と、ステージ中だけ「諦める」。諦めるとランが終わるので、押したらその場でもう一度確かめる */
+function MenuActions({ t, onClose, onGiveUp }: ActionsProps) {
   const [confirming, setConfirming] = useState(false);
+  if (onGiveUp && confirming) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <p className="m-0">{t.settings.confirmGiveUp}</p>
+        <div className="flex gap-3">
+          <GameButton tone="normal" autoFocus onClick={() => setConfirming(false)}>
+            {t.settings.keepPlaying}
+          </GameButton>
+          {/* ゲームオーバーの音が鳴るので、ボタンの音は鳴らさない */}
+          <GameButton tone="normal" className="text-destructive" data-silent onClick={onGiveUp}>
+            {t.settings.giveUp}
+          </GameButton>
+        </div>
+      </div>
+    );
+  }
   return (
-    <div className="flex w-full flex-col items-center gap-2 border-t border-border pt-3">
-      {confirming ? (
-        <>
-          <p className="m-0">{t.settings.confirmGiveUp}</p>
-          <div className="flex gap-3">
-            <GameButton tone="normal" onClick={() => setConfirming(false)}>
-              {t.settings.keepPlaying}
-            </GameButton>
-            {/* ゲームオーバーの音が鳴るので、ボタンの音は鳴らさない */}
-            <GameButton tone="normal" className="text-destructive" data-silent onClick={onGiveUp}>
-              {t.settings.giveUp}
-            </GameButton>
-          </div>
-        </>
-      ) : (
+    <>
+      <GameButton autoFocus onClick={onClose}>
+        {t.settings.close}
+      </GameButton>
+      {onGiveUp && (
         <GameButton tone="normal" className="text-destructive" onClick={() => setConfirming(true)}>
           {t.settings.giveUp}
         </GameButton>
       )}
-    </div>
+    </>
   );
 }
 

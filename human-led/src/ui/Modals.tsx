@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { Messages } from "../i18n/messages";
 import type { Game } from "../logic/types";
@@ -14,12 +13,17 @@ type Perform = (action: ScreenAction) => void;
 
 type Props<P extends Game["phase"]> = { game: Extract<Game, { phase: P }>; t: Messages; perform: Perform };
 
-const Actions = ({ children }: { children: ReactNode }) => <div className="flex justify-center gap-3">{children}</div>;
-
 export function ClearModal({ game, t, perform }: Props<"cleared">) {
   const { summary } = game;
   return (
-    <GameDialog title={t.cleared.title(summary.stageNumber)}>
+    <GameDialog
+      title={t.cleared.title(summary.stageNumber)}
+      actions={
+        <GameButton autoFocus onClick={() => perform({ kind: "openShop" })}>
+          {t.cleared.toShop}
+        </GameButton>
+      }
+    >
       <Stats>
         <Stat label={t.cleared.ppEarned}>{summary.ppEarned}</Stat>
         <Stat label={t.cleared.score}>{summary.batteryScore + summary.timeBonus}</Stat>
@@ -31,11 +35,6 @@ export function ClearModal({ game, t, perform }: Props<"cleared">) {
         </Stat>
         <Stat label={t.cleared.elapsed}>{formatRemainingTime(summary.elapsedMs)}</Stat>
       </Stats>
-      <Actions>
-        <GameButton autoFocus onClick={() => perform({ kind: "openShop" })}>
-          {t.cleared.toShop}
-        </GameButton>
-      </Actions>
     </GameDialog>
   );
 }
@@ -43,7 +42,19 @@ export function ClearModal({ game, t, perform }: Props<"cleared">) {
 export function ShopModal({ game, t, perform }: Props<"shop">) {
   const { rerollPrice } = game.run.tuning.config;
   return (
-    <GameDialog title={t.shop.title}>
+    <GameDialog
+      title={t.shop.title}
+      actions={
+        <>
+          <GameButton tone="normal" disabled={game.run.pp < rerollPrice} onClick={() => perform({ kind: "reroll" })}>
+            {t.shop.reroll(rerollPrice)}
+          </GameButton>
+          <GameButton autoFocus onClick={() => perform({ kind: "nextStage" })}>
+            {t.shop.nextStage}
+          </GameButton>
+        </>
+      }
+    >
       <p className="m-0 text-lg font-bold">{t.shop.pp(game.run.pp)}</p>
       <ul className="m-0 grid w-full list-none grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 p-0">
         {describeOffers(game, t).map((offer) => (
@@ -67,21 +78,20 @@ export function ShopModal({ game, t, perform }: Props<"shop">) {
           </li>
         ))}
       </ul>
-      <Actions>
-        <GameButton tone="normal" disabled={game.run.pp < rerollPrice} onClick={() => perform({ kind: "reroll" })}>
-          {t.shop.reroll(rerollPrice)}
-        </GameButton>
-        <GameButton autoFocus onClick={() => perform({ kind: "nextStage" })}>
-          {t.shop.nextStage}
-        </GameButton>
-      </Actions>
     </GameDialog>
   );
 }
 
 export function ReviveModal({ game, t, perform }: Props<"reviveChoice">) {
   return (
-    <GameDialog title={t.revive.title}>
+    <GameDialog
+      title={t.revive.title}
+      actions={
+        <GameButton tone="normal" onClick={() => perform({ kind: "giveUp" })}>
+          {t.revive.giveUp}
+        </GameButton>
+      }
+    >
       <p className="m-0">{t.revive.prompt}</p>
       <ul className="m-0 flex w-[min(420px,100%)] list-none flex-col gap-2 p-0">
         {reviveOptions(game.run, t).map((option) => (
@@ -102,11 +112,6 @@ export function ReviveModal({ game, t, perform }: Props<"reviveChoice">) {
           </li>
         ))}
       </ul>
-      <Actions>
-        <GameButton tone="normal" onClick={() => perform({ kind: "giveUp" })}>
-          {t.revive.giveUp}
-        </GameButton>
-      </Actions>
     </GameDialog>
   );
 }
