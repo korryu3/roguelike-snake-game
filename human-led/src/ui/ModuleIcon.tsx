@@ -4,8 +4,7 @@ import type { ModuleId } from "../logic/types";
 import type { SpriteKey } from "../render/sprites";
 import { useSprites } from "./sprites";
 
-/** 画像がまだないモジュールは載せない */
-const MODULE_SPRITES: Readonly<Partial<Record<ModuleId, SpriteKey>>> = {
+const MODULE_SPRITES: Readonly<Record<ModuleId, SpriteKey>> = {
   doublePpAndGrowth: "moduleDoublePpAndGrowth",
   revive: "moduleRevive",
   reviveAtOneHp: "moduleRevivePartial",
@@ -14,13 +13,15 @@ const MODULE_SPRITES: Readonly<Partial<Record<ModuleId, SpriteKey>>> = {
   wallDamageImmunity: "moduleWallImmunity",
   maxHpPlus1: "moduleMaxHp",
   doublePpBattery: "moduleDoublePpBattery",
+  bodyCut: "moduleBodyCut",
+  fasterMovement: "moduleFasterMovement",
+  slowerMovement: "moduleSlowerMovement",
+  extraModuleChoice: "moduleExtraModuleChoice",
 };
 
 /** モジュールの画像。画像がまだないモジュールはnull */
 export function useModuleImage(module: ModuleId): string | null {
-  const urls = useSprites().urls;
-  const key = MODULE_SPRITES[module];
-  return key === undefined ? null : (urls[key] ?? null);
+  return useSprites().urls[MODULE_SPRITES[module]] ?? null;
 }
 
 type Props = { readonly module: ModuleId; readonly name: string; readonly className?: string };

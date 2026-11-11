@@ -8,7 +8,7 @@ import { type SpriteKey, spriteUrls, type SpriteUrls } from "./sprites";
  * 名前を並べるのは、使わない画像（大きな1枚絵など）を単一HTMLに埋め込まないため。
  */
 const FOUND = import.meta.glob<string>(
-  "../assets/images/{battery,button-dark,button-light,double-battery,floor-center,floor-dark,floor-light,goal,heart,heart-damaged,module-double-pp-and-growth,module-max-hp,module-revive,module-revive-partial,module-time-limit-boost,module-time-limit-plus,module-wall-immunity,progress-empty,progress-full,snake-body-1,snake-body-2,snake-head,wall,wall-top}.png",
+  "../assets/images/{battery,button-dark,button-light,double-battery,floor-center,floor-dark,floor-light,goal,heart,heart-damaged,module-body-cut,module-double-pp-and-growth,module-extra-module-choice,module-faster-movement,module-max-hp,module-revive,module-revive-partial,module-slower-movement,module-time-limit-boost,module-time-limit-plus,module-wall-immunity,progress-empty,progress-full,snake-body-1,snake-body-2,snake-head,wall,wall-top}.png",
   { eager: true, import: "default", query: "?url" },
 );
 
