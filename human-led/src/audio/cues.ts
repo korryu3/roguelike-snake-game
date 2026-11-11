@@ -22,6 +22,9 @@ function soundOf(event: GameEvent): SoundId | null {
     // ぶつかったことより、ダメージを受けたことを知らせる。無敵時間中や壁ダメージ無効で防いだときは鳴らさない
     case "collided":
       return event.damaged ? "damage" : null;
+    // 体を切った音は、まだ素材がないのでダメージの音を使う
+    case "bodyCut":
+      return "damage";
     case "goalAppeared":
       return "goal";
     case "revived":

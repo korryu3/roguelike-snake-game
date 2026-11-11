@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 import { CONFIG, MODULE_IDS, MODULES } from "../config";
 import { buyModule, openShop, reroll } from "./shop";
-import { begin, cleared, offersOf } from "./testing";
+import { begin, cleared, offersOf, TEST_TUNING } from "./testing";
 import type { Game, ModuleId, RunSetup, StepResult } from "./types";
 
 const ALL_MODULES = MODULE_IDS;
@@ -124,5 +124,46 @@ describe("reroll", () => {
   it("モジュールの画面以外で呼ぶと何も変わらない", () => {
     const game = cleared({ pp: 100 });
     expect(reroll(game)).toEqual({ game, events: [] });
+  });
+});
+
+describe("モジュール候補＋1", () => {
+  const withChance = (chance: number): RunSetup => ({
+    tuning: { ...TEST_TUNING, config: { ...TEST_TUNING.config, extraModuleChoiceChancePerStack: chance } },
+  });
+  const EXTRA = CONFIG.shopOfferCount + 1;
+
+  it("確率が1なら、ショップを開いたときの候補が1つ増える", () => {
+    const game = shopWith({ ...withChance(1), modules: ["extraModuleChoice"] });
+    expect(offersOf(game)).toHaveLength(EXTRA);
+  });
+
+  it("確率が1なら、リロールでも候補が1つ増える", () => {
+    const shop = shopWith({ ...withChance(1), modules: ["extraModuleChoice"] });
+    expect(offersOf(reroll(shop).game)).toHaveLength(EXTRA);
+  });
+
+  it("確率が1なら、買い切ったあとの無料の引き直しでも候補が1つ増える", () => {
+    const shop = shopWith({ ...withChance(1), modules: ["extraModuleChoice"] });
+    const indexes = offersOf(shop).map((_, i) => i);
+    const { game } = indexes.reduce<StepResult>((acc, i) => buyModule(acc.game, i), { game: shop, events: [] });
+    expect(offersOf(game)).toHaveLength(EXTRA);
+    expect(offersOf(game).every((offer) => !offer.sold)).toBe(true);
+  });
+
+  it("確率は1つ持つごとに足し算で上がる（0.5を2つで必ず増える）", () => {
+    const counts = seeds.map(
+      (seed) =>
+        offersOf(shopWith({ ...withChance(0.5), modules: ["extraModuleChoice", "extraModuleChoice"] }, seed)).length,
+    );
+    expect(counts.every((n) => n === EXTRA)).toBe(true);
+  });
+
+  it("確率が1未満なら、候補が増えないこともある", () => {
+    const counts = seeds.map(
+      (seed) => offersOf(shopWith({ ...withChance(0.5), modules: ["extraModuleChoice"] }, seed)).length,
+    );
+    expect(counts).toContain(CONFIG.shopOfferCount);
+    expect(counts).toContain(EXTRA);
   });
 });

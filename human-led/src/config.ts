@@ -19,6 +19,9 @@ export const CONFIG = {
   timeLimitPlusMs: 5_000,
   timeLimitBoostMs: 15_000,
   doublePpBatteryChancePerStack: 0.2,
+  fasterMovementMultiplier: 1.25,
+  slowerMovementMultiplier: 0.75,
+  extraModuleChoiceChancePerStack: 0.25,
   heartEveryTotalPp: 10,
   heartWithBatteryChance: 0.03,
 } as const;
@@ -56,6 +59,10 @@ export const MODULES: Record<ModuleId, ModuleSpec> = {
   wallDamageImmunity: { price: 3, maxStack: 3 },
   maxHpPlus1: { price: 7, maxStack: 3 },
   doublePpBattery: { price: 5, maxStack: 3 },
+  bodyCut: { price: 12, maxStack: 2 },
+  fasterMovement: { price: 2, maxStack: 1 },
+  slowerMovement: { price: 2, maxStack: 1 },
+  extraModuleChoice: { price: 4, maxStack: 2 },
 };
 
 export const MODULE_IDS: readonly ModuleId[] = keysOf(MODULES);

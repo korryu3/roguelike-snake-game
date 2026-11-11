@@ -1,5 +1,6 @@
 import { CONFIG, DEFAULT_TUNING, type Tuning } from "../config";
 import { startRun, step } from "./game";
+import { effectsOf } from "./modules";
 import type { Cell, Direction, Game, GameEvent, RunSetup } from "./types";
 
 export const CENTER: Cell = { x: 7, y: 7 };
@@ -38,7 +39,8 @@ export const headOf = (game: Game) => stageOf(game).body[0];
 /** すぐ右のゴールに入って、クリアの局面になったところ */
 export function cleared(setup: RunSetup = {}, seed = 1): Game {
   const game = begin("right", { goal: { x: 8, y: 7 }, batteriesEaten: CONFIG.batteriesToGoal, ...setup }, seed);
-  return tick(game).game;
+  // 移動速度ダウンを持たせても1マス進むように、持っているモジュールでの移動の間隔だけ進める
+  return step(game, [], effectsOf(game.run.modules, game.run.tuning.config).moveIntervalMs).game;
 }
 
 export function offersOf(game: Game) {

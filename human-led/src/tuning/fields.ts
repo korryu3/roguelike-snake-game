@@ -6,6 +6,8 @@ export type Rule = { readonly min: number; readonly max: number; readonly intege
 
 const count = (min: number, max = Number.MAX_SAFE_INTEGER): Rule => ({ min, max, integer: true });
 const PROBABILITY: Rule = { min: 0, max: 1, integer: false };
+/** 0倍だと進まなくなるので、0より大きい値だけを受け付ける */
+const SPEED: Rule = { min: 0.1, max: 10, integer: false };
 
 export type ConfigField = { readonly label: string; readonly group: string; readonly rule: Rule };
 
@@ -31,6 +33,13 @@ export const CONFIG_FIELDS: Readonly<Record<keyof Config, ConfigField>> = {
   timeLimitBoostMs: { label: "制限時間延長（次のステージ）の秒数（ms）", group: "モジュールの効果", rule: count(0) },
   doublePpBatteryChancePerStack: {
     label: "PP2倍のバッテリーの確率（1個あたり）",
+    group: "モジュールの効果",
+    rule: PROBABILITY,
+  },
+  fasterMovementMultiplier: { label: "移動速度アップの倍率", group: "モジュールの効果", rule: SPEED },
+  slowerMovementMultiplier: { label: "移動速度ダウンの倍率", group: "モジュールの効果", rule: SPEED },
+  extraModuleChoiceChancePerStack: {
+    label: "モジュール候補＋1の確率（1個あたり）",
     group: "モジュールの効果",
     rule: PROBABILITY,
   },
