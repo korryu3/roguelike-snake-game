@@ -65,7 +65,8 @@ export type Movement = {
   readonly invincibleMs: number;
 };
 
-export type DeathCause = "hp" | "timeUp";
+/** gaveUpは、ステージ中に設定メニューから諦めたとき */
+export type DeathCause = "hp" | "timeUp" | "gaveUp";
 
 /** クリアのモーダルに出す、そのステージの結果 */
 export type ClearSummary = {
