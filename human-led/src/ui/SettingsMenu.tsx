@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,11 @@ export function SettingsMenu({ t, preferences, onChange, onSfxPreview, onClose, 
   const setVolumes = (next: Partial<Preferences["volumes"]>) =>
     onChange({ ...preferences, volumes: { ...volumes, ...next } });
   return (
-    <GameDialog title={t.settings.title} className="w-[min(420px,calc(100vw-2rem))]">
+    <GameDialog
+      title={t.settings.title}
+      className="w-[min(420px,calc(100vw-2rem))]"
+      actions={<MenuActions t={t} onClose={onClose} onGiveUp={onGiveUp} />}
+    >
       <VolumeSlider
         id="volume-bgm"
         label={t.settings.bgm}
@@ -42,22 +46,31 @@ export function SettingsMenu({ t, preferences, onChange, onSfxPreview, onClose, 
       />
       <div className={ROW}>
         <span>{t.language}</span>
-        {/* 切り替えのボタンには、どちらの言語で遊んでいても、その言語自身の書き方で名前を出す */}
-        <div className="flex gap-2" role="group" aria-label={t.language}>
+        {/* 設定の値を選ぶ切り替え。操作のボタン（閉じる・諦める）とは見た目を分け、スライダーと同じ幅に収める */}
+        <div
+          className="grid grid-cols-2 overflow-hidden rounded-md border border-border"
+          role="group"
+          aria-label={t.language}
+        >
           {LANGS.map((l) => (
-            <GameButton
+            <button
               key={l}
-              tone="normal"
-              className={cn(l === lang && "border-highlight text-highlight")}
+              type="button"
               aria-pressed={l === lang}
+              className={cn(
+                "px-2 py-1 text-sm transition-colors",
+                l === lang
+                  ? "bg-highlight font-bold text-background"
+                  : "bg-secondary text-foreground/80 hover:brightness-125",
+              )}
               onClick={() => onChange({ ...preferences, lang: l })}
             >
+              {/* どちらの言語で遊んでいても、その言語自身の書き方で名前を出す */}
               {LANG_NAMES[l]}
-            </GameButton>
+            </button>
           ))}
         </div>
       </div>
-      <Actions t={t} onClose={onClose} onGiveUp={onGiveUp} />
     </GameDialog>
   );
 }
@@ -68,54 +81,36 @@ type ActionsProps = {
   readonly onGiveUp?: (() => void) | undefined;
 };
 
-/** 「閉じる」と、ステージ中だけ「諦める」を並べる。諦めるとランが終わるので、押したらその場でもう一度確かめる */
-function Actions({ t, onClose, onGiveUp }: ActionsProps) {
+/** 「閉じる」と、ステージ中だけ「諦める」。諦めるとランが終わるので、押したらその場でもう一度確かめる */
+function MenuActions({ t, onClose, onGiveUp }: ActionsProps) {
   const [confirming, setConfirming] = useState(false);
   if (onGiveUp && confirming) {
     return (
-      <ActionRow>
-        {/* 問いかけは、答えのボタン2つの真ん中に置く */}
-        <div className="flex flex-col items-center gap-2">
-          <p className="m-0">{t.settings.confirmGiveUp}</p>
-          <div className="flex gap-2">
-            <GameButton tone="normal" autoFocus onClick={() => setConfirming(false)}>
-              {t.settings.keepPlaying}
-            </GameButton>
-            {/* ゲームオーバーの音が鳴るので、ボタンの音は鳴らさない */}
-            <GameButton tone="normal" className="text-destructive" data-silent onClick={onGiveUp}>
-              {t.settings.giveUp}
-            </GameButton>
-          </div>
+      <div className="flex flex-col items-center gap-2">
+        <p className="m-0">{t.settings.confirmGiveUp}</p>
+        <div className="flex gap-3">
+          <GameButton tone="normal" autoFocus onClick={() => setConfirming(false)}>
+            {t.settings.keepPlaying}
+          </GameButton>
+          {/* ゲームオーバーの音が鳴るので、ボタンの音は鳴らさない */}
+          <GameButton tone="normal" className="text-destructive" data-silent onClick={onGiveUp}>
+            {t.settings.giveUp}
+          </GameButton>
         </div>
-      </ActionRow>
+      </div>
     );
   }
-  const close = (
-    <GameButton autoFocus onClick={onClose}>
-      {t.settings.close}
-    </GameButton>
-  );
-  // 「閉じる」だけのとき（タイトル・ゲームオーバー）は、ダイアログの真ん中に置く
-  if (!onGiveUp) return <div className="flex justify-center">{close}</div>;
   return (
-    <ActionRow>
-      <div className="flex gap-2">
-        {close}
+    <>
+      <GameButton autoFocus onClick={onClose}>
+        {t.settings.close}
+      </GameButton>
+      {onGiveUp && (
         <GameButton tone="normal" className="text-destructive" onClick={() => setConfirming(true)}>
           {t.settings.giveUp}
         </GameButton>
-      </div>
-    </ActionRow>
-  );
-}
-
-/** 上の設定の行と同じ列に入れ、言語のボタンと左端をそろえる */
-function ActionRow({ children }: { children: ReactNode }) {
-  return (
-    <div className={ROW}>
-      <span />
-      <div className="col-span-2 flex flex-col items-start gap-2">{children}</div>
-    </div>
+      )}
+    </>
   );
 }
 

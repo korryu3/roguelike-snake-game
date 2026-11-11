@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 type Props = {
   readonly title: string;
   readonly children: ReactNode;
+  /** モーダルを終える操作のボタン。どのモーダルでも、一番下の真ん中に並べる */
+  readonly actions?: ReactNode;
   readonly className?: string;
 };
 
@@ -12,7 +14,7 @@ type Props = {
  * ゲームのモーダル。開いているかどうかはゲームの局面で決まるので、
  * Escや外側のクリックでは閉じない（設定メニューのEscは、セッションが受け取る）
  */
-export function GameDialog({ title, children, className }: Props) {
+export function GameDialog({ title, children, actions, className }: Props) {
   return (
     <Dialog open>
       <DialogContent
@@ -27,6 +29,7 @@ export function GameDialog({ title, children, className }: Props) {
       >
         <DialogTitle className="text-2xl">{title}</DialogTitle>
         {children}
+        {actions && <div className="flex justify-center gap-3">{actions}</div>}
       </DialogContent>
     </Dialog>
   );
