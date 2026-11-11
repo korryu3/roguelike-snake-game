@@ -19,7 +19,7 @@ export const CONFIG = {
   timeLimitPlusMs: 5_000,
   timeLimitBoostMs: 15_000,
   doublePpBatteryChancePerStack: 0.2,
-  fasterMovementMultiplier: 1.5,
+  fasterMovementMultiplier: 1.25,
   slowerMovementMultiplier: 0.75,
   extraModuleChoiceChancePerStack: 0.25,
   heartEveryTotalPp: 10,

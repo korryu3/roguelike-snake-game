@@ -97,9 +97,9 @@ describe("step: 移動速度アップ・ダウン", () => {
   const START = { x: 7, y: 7 };
   const MOVED = { x: 8, y: 7 };
 
-  it("移動速度アップを持つと、移動の間隔が1.5分の1になる", () => {
-    expect(advancedBy(["fasterMovement"], 99)).toEqual(START);
-    expect(advancedBy(["fasterMovement"], 100)).toEqual(MOVED);
+  it("移動速度アップを持つと、移動の間隔が1.25分の1になる", () => {
+    expect(advancedBy(["fasterMovement"], 119)).toEqual(START);
+    expect(advancedBy(["fasterMovement"], 120)).toEqual(MOVED);
   });
 
   it("移動速度ダウンを持つと、移動の間隔が0.75分の1になる", () => {
@@ -108,8 +108,8 @@ describe("step: 移動速度アップ・ダウン", () => {
   });
 
   it("両方持つと、倍率を掛け合わせる", () => {
-    expect(advancedBy(["fasterMovement", "slowerMovement"], 133)).toEqual(START);
-    expect(advancedBy(["fasterMovement", "slowerMovement"], 134)).toEqual(MOVED);
+    expect(advancedBy(["fasterMovement", "slowerMovement"], 159)).toEqual(START);
+    expect(advancedBy(["fasterMovement", "slowerMovement"], 160)).toEqual(MOVED);
   });
 });
 
