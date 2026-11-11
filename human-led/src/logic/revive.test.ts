@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 import { CONFIG } from "../config";
-import { giveUp, revive, step } from "./game";
-import { begin, CENTER, stageOf, ticks } from "./testing";
+import { giveUp, pause, revive, startRun, step } from "./game";
+import { begin, CENTER, cleared, stageOf, ticks } from "./testing";
 import type { Game, ModuleId } from "./types";
 
 /** 中央から右へ2マス進み、HP1で壁にぶつかって、生き返るモーダルになったところ */
@@ -81,9 +81,18 @@ describe("giveUp", () => {
     expect(game).toMatchObject({ phase: "gameOver", cause: "hp" });
   });
 
-  it("生き返るモーダル以外で呼ぶと何も変わらない", () => {
-    const game = begin("right");
-    expect(giveUp(game)).toEqual({ game, events: [] });
+  it("一時停止から諦めると、ゲームオーバー（死因は諦めた）", () => {
+    const { game } = giveUp(pause(begin("right")).game);
+    expect(game).toMatchObject({ phase: "gameOver", cause: "gaveUp" });
+  });
+
+  it("開始待ちから諦めると、ゲームオーバー（死因は諦めた）", () => {
+    const { game } = giveUp(startRun(1));
+    expect(game).toMatchObject({ phase: "gameOver", cause: "gaveUp" });
+  });
+
+  it("動いている最中やクリアのモーダルなど、ほかの局面で呼ぶと何も変わらない", () => {
+    for (const game of [begin("right"), cleared()]) expect(giveUp(game)).toEqual({ game, events: [] });
   });
 });
 

@@ -107,6 +107,8 @@ export function createSession(
     perform: (action) => {
       const { game, events } = applyAction(store.getSnapshot(), action);
       commit(game, events);
+      // 設定メニューから諦めたら、メニューを閉じてゲームオーバー画面を出す
+      if (game.phase === "gameOver") setView({ menuOpen: false });
     },
     restart,
     startNewRun: () => {

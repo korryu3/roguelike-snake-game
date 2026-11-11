@@ -19,6 +19,9 @@ export type Messages = {
     readonly close: string;
     readonly bgm: string;
     readonly sfx: string;
+    readonly giveUp: string;
+    readonly confirmGiveUp: string;
+    readonly keepPlaying: string;
   };
   readonly hud: {
     readonly stage: (stageNumber: number) => string;
@@ -88,6 +91,9 @@ const ja: Messages = {
     close: "閉じる",
     bgm: "BGM",
     sfx: "効果音",
+    giveUp: "諦める",
+    confirmGiveUp: "本当に諦めますか？",
+    keepPlaying: "続ける",
   },
   hud: {
     stage: (n) => `ステージ ${n}`,
@@ -123,7 +129,7 @@ const ja: Messages = {
   },
   gameOver: {
     title: "ゲームオーバー",
-    causes: { hp: "HP 0", timeUp: "タイムアップ" },
+    causes: { hp: "HP 0", timeUp: "タイムアップ", gaveUp: "諦めた" },
     reachedStage: "到達ステージ",
     score: "スコア",
     cause: "死因",
@@ -177,6 +183,9 @@ const en: Messages = {
     close: "Close",
     bgm: "Music",
     sfx: "Sound effects",
+    giveUp: "Give up",
+    confirmGiveUp: "Give up this run?",
+    keepPlaying: "Keep playing",
   },
   hud: {
     stage: (n) => `Stage ${n}`,
@@ -212,7 +221,7 @@ const en: Messages = {
   },
   gameOver: {
     title: "Game Over",
-    causes: { hp: "HP 0", timeUp: "Time up" },
+    causes: { hp: "HP 0", timeUp: "Time up", gaveUp: "Gave up" },
     reachedStage: "Stage reached",
     score: "Score",
     cause: "Cause",
